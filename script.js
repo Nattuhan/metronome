@@ -449,7 +449,7 @@ class Metronome {
             this.updateTimerDisplay();
 
             // 残り10秒以下で警告表示
-            const timerDisplay = document.getElementById('timerDisplay');
+            const timerDisplay = document.getElementById('timerDisplayHeader');
             if (this.timerRemaining <= 10 && this.timerRemaining > 0) {
                 timerDisplay.classList.add('warning');
             }
@@ -467,7 +467,7 @@ class Metronome {
             this.timerInterval = null;
         }
 
-        const timerDisplay = document.getElementById('timerDisplay');
+        const timerDisplay = document.getElementById('timerDisplayHeader');
         timerDisplay.classList.remove('warning');
 
         // タイマーを初期表示に戻す
@@ -484,7 +484,7 @@ class Metronome {
     updateTimerDisplay() {
         const minutes = Math.floor(this.timerRemaining / 60);
         const seconds = this.timerRemaining % 60;
-        const timerDisplay = document.getElementById('timerDisplay');
+        const timerDisplay = document.getElementById('timerDisplayHeader');
         timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
 
@@ -648,7 +648,7 @@ class Metronome {
 
     // タイマープレビューを更新
     updateTimerPreview() {
-        const timerDisplay = document.getElementById('timerDisplay');
+        const timerDisplay = document.getElementById('timerDisplayHeader');
 
         if (this.timerEnabled) {
             const totalSeconds = this.timerMinutes * 60 + this.timerSeconds;
@@ -777,20 +777,18 @@ class Metronome {
             name.textContent = preset.name;
             name.contentEditable = false;
 
-            // 名前クリックでリネーム
-            name.addEventListener('click', (e) => {
+            // 名前ダブルクリックでリネーム
+            name.addEventListener('dblclick', (e) => {
                 e.stopPropagation();
-                if (name.contentEditable === 'false') {
-                    name.contentEditable = true;
-                    name.classList.add('editing');
-                    name.focus();
-                    // テキストを全選択
-                    const range = document.createRange();
-                    range.selectNodeContents(name);
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                }
+                name.contentEditable = true;
+                name.classList.add('editing');
+                name.focus();
+                // テキストを全選択
+                const range = document.createRange();
+                range.selectNodeContents(name);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
             });
 
             name.addEventListener('blur', () => {

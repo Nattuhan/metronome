@@ -11,6 +11,13 @@
         <header>
             <h1 data-i18n="title">Metronome</h1>
             <div class="header-controls">
+                <!-- タイマー表示 -->
+                <div class="header-timer">
+                    <div class="timer-compact">
+                        <div id="timerDisplayHeader" class="timer-display-header">--:--</div>
+                    </div>
+                </div>
+
                 <label class="theme-toggle-switch" title="Theme">
                     <span class="toggle-icon left">🌙</span>
                     <input type="checkbox" id="themeToggle">
@@ -144,7 +151,6 @@
                                 <span data-i18n="seconds">sec</span>
                             </div>
                         </div>
-                        <div id="timerDisplay" class="timer-display">--:--</div>
                         <label class="checkbox-label">
                             <input type="checkbox" id="timerEnabled" class="checkbox-input">
                             <span data-i18n="timerEnabled">Enable timer</span>

@@ -46,6 +46,31 @@ header h1 {
     align-items: center;
 }
 
+/* ヘッダータイマー */
+.header-timer {
+    display: flex;
+    align-items: center;
+}
+
+.timer-display-header {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f5f5f5;
+    background: #2c2c2c;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 2px solid #444;
+    letter-spacing: 2px;
+    min-width: 100px;
+    text-align: center;
+}
+
+.timer-display-header.warning {
+    color: #ff6b6b;
+    border-color: #ff6b6b;
+    animation: timerBlink 0.5s ease-in-out infinite;
+}
+
 /* トグルスイッチ共通スタイル */
 .theme-toggle-switch,
 .lang-toggle-switch {
@@ -646,8 +671,25 @@ kbd {
         padding: 20px;
     }
 
+    header {
+        margin-bottom: 20px;
+    }
+
     header h1 {
-        font-size: 2rem;
+        font-size: 1.5rem;
+    }
+
+    .header-controls {
+        position: static;
+        justify-content: center;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+
+    .timer-display-header {
+        font-size: 1.2rem;
+        padding: 6px 12px;
+        min-width: 80px;
     }
 
     .bpm-display {
@@ -933,23 +975,6 @@ body.light-mode .visual-display.flash-mode.flash-active .bpm-display {
     font-weight: 500;
 }
 
-.timer-display {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #f5f5f5;
-    text-align: center;
-    background: #2c2c2c;
-    padding: 12px 20px;
-    border-radius: 12px;
-    border: 2px solid #444;
-    letter-spacing: 2px;
-}
-
-.timer-display.warning {
-    color: #ff6b6b;
-    border-color: #ff6b6b;
-    animation: timerBlink 0.5s ease-in-out infinite;
-}
 
 @keyframes timerBlink {
     0%, 100% { opacity: 1; }
@@ -967,13 +992,13 @@ body.light-mode .timer-input-group span {
     color: #555;
 }
 
-body.light-mode .timer-display {
+body.light-mode .timer-display-header {
     background: #f8f9fa;
     color: #333;
     border-color: #ccc;
 }
 
-body.light-mode .timer-display.warning {
+body.light-mode .timer-display-header.warning {
     color: #d63031;
     border-color: #ff6b6b;
 }
