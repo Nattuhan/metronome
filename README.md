@@ -92,35 +92,6 @@ Tap the "Tap Tempo" button repeatedly at your desired tempo, and the BPM will au
 
 *Requires a modern browser with Web Audio API support*
 
-### 📦 Installation
-
-To use locally, simply download the files and open in your browser:
-
-```bash
-git clone https://github.com/Nattuhan/metronome.git
-cd metronome
-# Open index.html in your browser
-```
-
-### 💡 Use Cases
-
-- 🎸 Music practice
-- 🏋️ Workout and training
-- 🧘 Yoga and meditation
-- 📚 Focused work sessions / Pomodoro Technique
-- 💤 Sleep aid
-
-### 📁 File Structure
-
-```
-metronome/
-├── index.html      # Main HTML
-├── style.css       # Stylesheets
-├── script.js       # Metronome logic
-├── README.md       # This file
-└── CLAUDE.md       # Developer documentation
-```
-
 ### 📄 License
 
 MIT License - Free to use, modify, and distribute
@@ -226,35 +197,6 @@ Created with Claude Code by Anthropic
 - Opera
 
 ※ Web Audio APIをサポートする最新のブラウザで動作します
-
-### 📦 インストール
-
-ローカルで使用する場合は、ファイルをダウンロードしてブラウザで開くだけです。
-
-```bash
-git clone https://github.com/Nattuhan/metronome.git
-cd metronome
-# index.htmlをブラウザで開く
-```
-
-### 💡 活用シーン
-
-- 🎸 楽器練習
-- 🏋️ ワークアウト・トレーニング
-- 🧘 ヨガ・瞑想
-- 📚 集中作業・ポモドーロテクニック
-- 💤 睡眠導入
-
-### 📁 ファイル構成
-
-```
-metronome/
-├── index.html      # メインHTML
-├── style.css       # スタイルシート
-├── script.js       # メトロノーム機能
-├── README.md       # このファイル
-└── CLAUDE.md       # 開発者向けドキュメント
-```
 
 ### 📄 ライセンス
 
