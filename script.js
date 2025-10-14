@@ -388,10 +388,50 @@ class Metronome {
     }
 }
 
+// テーマ切り替え機能
+class ThemeManager {
+    constructor() {
+        this.currentTheme = localStorage.getItem('theme') || 'dark';
+        this.themeToggle = document.getElementById('themeToggle');
+        this.themeIcon = document.querySelector('.theme-icon');
+
+        this.init();
+    }
+
+    init() {
+        // 保存されたテーマを適用
+        this.applyTheme(this.currentTheme);
+
+        // ボタンのクリックイベント
+        this.themeToggle.addEventListener('click', () => {
+            this.toggleTheme();
+        });
+    }
+
+    applyTheme(theme) {
+        if (theme === 'light') {
+            document.body.classList.add('light-mode');
+            this.themeIcon.textContent = '🌙';
+        } else {
+            document.body.classList.remove('light-mode');
+            this.themeIcon.textContent = '☀️';
+        }
+        this.currentTheme = theme;
+    }
+
+    toggleTheme() {
+        const newTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+        this.applyTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+}
+
 // アプリケーション初期化
 let metronome;
+let themeManager;
 
 window.addEventListener('DOMContentLoaded', () => {
     metronome = new Metronome();
+    themeManager = new ThemeManager();
     console.log('メトロノームアプリが起動しました');
 });

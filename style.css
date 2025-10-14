@@ -27,12 +27,37 @@ body {
 header {
     text-align: center;
     margin-bottom: 30px;
+    position: relative;
 }
 
 header h1 {
     font-size: 2.5rem;
     color: #333;
     font-weight: 700;
+}
+
+/* テーマ切り替えボタン */
+.theme-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
+    transform: rotate(20deg);
+}
+
+.theme-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
 }
 
 /* ビジュアル表示エリア */
@@ -411,4 +436,106 @@ kbd {
 
 .visual-display.flash-mode.flash-active .bpm-display {
     color: white;
+}
+
+/* ライトモード */
+body.light-mode {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+}
+
+body.light-mode .container {
+    background: #ffffff;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .visual-display {
+    background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+}
+
+body.light-mode .beat-indicator {
+    background: #f8f9fa;
+    color: #333;
+}
+
+body.light-mode .btn-primary {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+    color: #333;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode .btn-primary:hover {
+    background: linear-gradient(135deg, #e8e8e8 0%, #d5d5d5 100%);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+body.light-mode .btn-primary.playing {
+    background: linear-gradient(135deg, #e0e0e0 0%, #cccccc 100%);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+body.light-mode .btn-secondary {
+    background: #f8f9fa;
+    color: #333;
+    border-color: #dee2e6;
+}
+
+body.light-mode .btn-secondary:hover {
+    background: #e9ecef;
+    color: #333;
+    border-color: #adb5bd;
+}
+
+body.light-mode .btn-preset {
+    background: #ffffff;
+    border-color: #dee2e6;
+}
+
+body.light-mode .btn-preset:hover {
+    background: #f8f9fa;
+    color: #333;
+    border-color: #adb5bd;
+}
+
+body.light-mode .slider::-webkit-slider-thumb {
+    background: #999;
+}
+
+body.light-mode .slider::-webkit-slider-thumb:hover {
+    background: #777;
+}
+
+body.light-mode .slider::-moz-range-thumb {
+    background: #999;
+}
+
+body.light-mode .slider::-moz-range-thumb:hover {
+    background: #777;
+}
+
+body.light-mode .pendulum {
+    background: linear-gradient(to top, #888 0%, #888 80%, transparent 80%);
+}
+
+body.light-mode .pendulum::after {
+    background: #aaa;
+}
+
+body.light-mode .select-input:focus {
+    border-color: #999;
+}
+
+body.light-mode .theme-toggle:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+body.light-mode #volumeValue {
+    color: #666;
+}
+
+body.light-mode .visual-display.flash-mode.flash-active {
+    background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+}
+
+body.light-mode .visual-display.flash-mode.flash-active .bpm-display {
+    color: #333;
 }
