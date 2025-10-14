@@ -267,7 +267,8 @@ class Metronome {
         switch(this.animationType) {
             case 'pendulum':
                 const maxAngle = 30;
-                const direction = beatNumber % 2 === 0 ? 1 : -1;
+                // 拍数に関係なく左右交互に振る
+                const direction = beatNumber % 2 === 0 ? -1 : 1;
                 const angle = maxAngle * direction;
 
                 // トランジション時間を拍の長さに合わせる
