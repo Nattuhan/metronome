@@ -23,6 +23,7 @@ class Metronome {
         this.soundType = localStorage.getItem('soundType') || this.defaults.soundType;
         this.rhythmPattern = localStorage.getItem('rhythmPattern') || this.defaults.rhythmPattern;
         this.animationType = localStorage.getItem('animationType') || this.defaults.animationType;
+        this.subdivisionSound = localStorage.getItem('subdivisionSound') === 'true';
 
         this.noteTime = 0.0;
         this.scheduleAheadTime = 0.1;
@@ -51,6 +52,7 @@ class Metronome {
         document.getElementById('soundType').value = this.soundType;
         document.getElementById('rhythmPattern').value = this.rhythmPattern;
         document.getElementById('animationType').value = this.animationType;
+        document.getElementById('subdivisionSound').checked = this.subdivisionSound;
         this.setAnimationType(this.animationType);
     }
 
@@ -62,6 +64,7 @@ class Metronome {
         localStorage.setItem('soundType', this.soundType);
         localStorage.setItem('rhythmPattern', this.rhythmPattern);
         localStorage.setItem('animationType', this.animationType);
+        localStorage.setItem('subdivisionSound', this.subdivisionSound);
     }
 
     // 設定をリセット
@@ -76,46 +79,74 @@ class Metronome {
         this.soundType = this.defaults.soundType;
         this.rhythmPattern = this.defaults.rhythmPattern;
         this.animationType = this.defaults.animationType;
+        this.subdivisionSound = false;
 
         this.loadSettings();
         this.saveSettings();
     }
 
     // 音を生成
-    playSound(time, isAccent = false) {
+    playSound(time, isAccent = false, isSubdivision = false) {
         const osc = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
 
         osc.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
 
-        // 音色に応じた周波数設定
-        switch(this.soundType) {
-            case 'click':
-                osc.frequency.value = isAccent ? 1000 : 800;
-                gainNode.gain.value = this.volume * (isAccent ? 1.5 : 1);
-                osc.type = 'sine';
-                break;
-            case 'beep':
-                osc.frequency.value = isAccent ? 880 : 440;
-                gainNode.gain.value = this.volume;
-                osc.type = 'square';
-                break;
-            case 'wood':
-                osc.frequency.value = isAccent ? 220 : 180;
-                gainNode.gain.value = this.volume * 0.8;
-                osc.type = 'triangle';
-                break;
-            case 'cowbell':
-                osc.frequency.value = isAccent ? 540 : 400;
-                gainNode.gain.value = this.volume * 0.9;
-                osc.type = 'square';
-                break;
+        // 細分化された音の場合、別の音を使用
+        if (isSubdivision && this.subdivisionSound) {
+            // 弱拍専用の音（より高く、短く、静かに）
+            switch(this.soundType) {
+                case 'click':
+                    osc.frequency.value = 1200;
+                    gainNode.gain.value = this.volume * 0.5;
+                    osc.type = 'sine';
+                    break;
+                case 'beep':
+                    osc.frequency.value = 1320;
+                    gainNode.gain.value = this.volume * 0.5;
+                    osc.type = 'square';
+                    break;
+                case 'wood':
+                    osc.frequency.value = 300;
+                    gainNode.gain.value = this.volume * 0.4;
+                    osc.type = 'triangle';
+                    break;
+                case 'cowbell':
+                    osc.frequency.value = 660;
+                    gainNode.gain.value = this.volume * 0.5;
+                    osc.type = 'square';
+                    break;
+            }
+        } else {
+            // 通常の音色に応じた周波数設定
+            switch(this.soundType) {
+                case 'click':
+                    osc.frequency.value = isAccent ? 1000 : 800;
+                    gainNode.gain.value = this.volume * (isAccent ? 1.5 : 1);
+                    osc.type = 'sine';
+                    break;
+                case 'beep':
+                    osc.frequency.value = isAccent ? 880 : 440;
+                    gainNode.gain.value = this.volume;
+                    osc.type = 'square';
+                    break;
+                case 'wood':
+                    osc.frequency.value = isAccent ? 220 : 180;
+                    gainNode.gain.value = this.volume * 0.8;
+                    osc.type = 'triangle';
+                    break;
+                case 'cowbell':
+                    osc.frequency.value = isAccent ? 540 : 400;
+                    gainNode.gain.value = this.volume * 0.9;
+                    osc.type = 'square';
+                    break;
+            }
         }
 
         // エンベロープ設定
         const attackTime = 0.001;
-        const releaseTime = 0.05;
+        const releaseTime = isSubdivision && this.subdivisionSound ? 0.03 : 0.05; // 弱拍は短く
 
         gainNode.gain.setValueAtTime(gainNode.gain.value, time);
         gainNode.gain.exponentialRampToValueAtTime(0.01, time + releaseTime);
@@ -130,20 +161,20 @@ class Metronome {
 
         switch(this.rhythmPattern) {
             case 'simple':
-                this.playSound(time, isAccent);
+                this.playSound(time, isAccent, false);
                 break;
             case 'eighth':
-                this.playSound(time, isAccent);
-                this.playSound(time + (60.0 / this.tempo) / 2, false);
+                this.playSound(time, isAccent, false);
+                this.playSound(time + (60.0 / this.tempo) / 2, false, true); // 弱拍
                 break;
             case 'triplet':
-                this.playSound(time, isAccent);
-                this.playSound(time + (60.0 / this.tempo) / 3, false);
-                this.playSound(time + (60.0 / this.tempo) * 2 / 3, false);
+                this.playSound(time, isAccent, false);
+                this.playSound(time + (60.0 / this.tempo) / 3, false, true); // 弱拍
+                this.playSound(time + (60.0 / this.tempo) * 2 / 3, false, true); // 弱拍
                 break;
             case 'sixteenth':
                 for(let i = 0; i < 4; i++) {
-                    this.playSound(time + (60.0 / this.tempo) * i / 4, isAccent && i === 0);
+                    this.playSound(time + (60.0 / this.tempo) * i / 4, isAccent && i === 0, i > 0); // i > 0は弱拍
                 }
                 break;
         }
@@ -423,6 +454,12 @@ class Metronome {
             this.setAnimationType(e.target.value);
         });
 
+        // 弱拍音オプション
+        document.getElementById('subdivisionSound').addEventListener('change', (e) => {
+            this.subdivisionSound = e.target.checked;
+            this.saveSettings();
+        });
+
         // プリセットボタン
         document.querySelectorAll('.btn-preset').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -551,7 +588,8 @@ class LanguageManager {
                 shortcutPlay: '再生/停止',
                 shortcutTempo: 'テンポ ±1 (Shift押下で ±10)',
                 shortcutTap: 'タップテンポ',
-                reset: '設定をリセット'
+                reset: '設定をリセット',
+                subdivisionSound: '細分化拍で別の音を使用'
             },
             en: {
                 title: 'Metronome',
@@ -588,7 +626,8 @@ class LanguageManager {
                 shortcutPlay: 'Play/Stop',
                 shortcutTempo: 'Tempo ±1 (Shift for ±10)',
                 shortcutTap: 'Tap Tempo',
-                reset: 'Reset Settings'
+                reset: 'Reset Settings',
+                subdivisionSound: 'Different sound for subdivisions'
             }
         };
 
