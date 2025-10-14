@@ -743,14 +743,14 @@ class Metronome {
         const lang = localStorage.getItem('language') || 'ja';
         const translationsMap = {
             ja: {
-                simple: 'シンプル',
+                simple: '4分音符',
                 eighth: '8分音符',
                 triplet: '3連符',
                 sixteenth: '16分音符',
                 sextuplet: '6連符'
             },
             en: {
-                simple: 'Simple',
+                simple: 'Quarter Notes',
                 eighth: 'Eighth Notes',
                 triplet: 'Triplets',
                 sixteenth: 'Sixteenth Notes',
@@ -905,7 +905,7 @@ class LanguageManager {
                 beats7: '7拍',
                 beats8: '8拍',
                 rhythm: 'リズムパターン',
-                simple: 'シンプル',
+                simple: '4分音符',
                 eighth: '8分音符',
                 triplet: '3連符',
                 sixteenth: '16分音符',
@@ -950,7 +950,7 @@ class LanguageManager {
                 beats7: '7 beats',
                 beats8: '8 beats',
                 rhythm: 'Rhythm Pattern',
-                simple: 'Simple',
+                simple: 'Quarter Notes',
                 eighth: 'Eighth Notes',
                 triplet: 'Triplets',
                 sixteenth: 'Sixteenth Notes',
