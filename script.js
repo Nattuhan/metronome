@@ -4,27 +4,79 @@ class Metronome {
         this.audioContext = null;
         this.isPlaying = false;
         this.currentBeat = 0;
-        this.tempo = 120;
-        this.beatsPerBar = 4;
+
+        // デフォルト設定
+        this.defaults = {
+            tempo: 120,
+            beatsPerBar: 4,
+            volume: 70,
+            soundType: 'click',
+            rhythmPattern: 'simple',
+            animationType: 'pendulum'
+        };
+
+        // 保存された設定を読み込むか、デフォルトを使用
+        this.tempo = parseInt(localStorage.getItem('tempo')) || this.defaults.tempo;
+        this.beatsPerBar = parseInt(localStorage.getItem('beatsPerBar')) || this.defaults.beatsPerBar;
+        this.volume = (parseInt(localStorage.getItem('volume')) || this.defaults.volume) / 100;
+        this.soundType = localStorage.getItem('soundType') || this.defaults.soundType;
+        this.rhythmPattern = localStorage.getItem('rhythmPattern') || this.defaults.rhythmPattern;
+        this.animationType = localStorage.getItem('animationType') || this.defaults.animationType;
+
         this.noteTime = 0.0;
         this.scheduleAheadTime = 0.1;
         this.nextNoteTime = 0.0;
         this.timerID = null;
-        this.volume = 0.7;
-        this.soundType = 'click';
-        this.rhythmPattern = 'simple';
-        this.animationType = 'pendulum';
 
         // タップテンポ用
         this.tapTimes = [];
         this.tapTimeout = null;
 
         this.initAudioContext();
+        this.loadSettings();
         this.initEventListeners();
     }
 
     initAudioContext() {
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // 設定を読み込んでUIに反映
+    loadSettings() {
+        this.setTempo(this.tempo);
+        this.setBeatsPerBar(this.beatsPerBar);
+        this.setVolume(this.volume * 100);
+        document.getElementById('soundType').value = this.soundType;
+        document.getElementById('rhythmPattern').value = this.rhythmPattern;
+        document.getElementById('animationType').value = this.animationType;
+        this.setAnimationType(this.animationType);
+    }
+
+    // 設定を保存
+    saveSettings() {
+        localStorage.setItem('tempo', this.tempo);
+        localStorage.setItem('beatsPerBar', this.beatsPerBar);
+        localStorage.setItem('volume', Math.round(this.volume * 100));
+        localStorage.setItem('soundType', this.soundType);
+        localStorage.setItem('rhythmPattern', this.rhythmPattern);
+        localStorage.setItem('animationType', this.animationType);
+    }
+
+    // 設定をリセット
+    resetSettings() {
+        if (this.isPlaying) {
+            this.stop();
+        }
+
+        this.tempo = this.defaults.tempo;
+        this.beatsPerBar = this.defaults.beatsPerBar;
+        this.volume = this.defaults.volume / 100;
+        this.soundType = this.defaults.soundType;
+        this.rhythmPattern = this.defaults.rhythmPattern;
+        this.animationType = this.defaults.animationType;
+
+        this.loadSettings();
+        this.saveSettings();
     }
 
     // 音を生成
@@ -162,25 +214,30 @@ class Metronome {
         document.getElementById('tempoSlider').value = this.tempo;
         document.getElementById('tempoInput').value = this.tempo;
         document.getElementById('bpm-display').textContent = this.tempo;
+        this.saveSettings();
     }
 
     setBeatsPerBar(beats) {
         this.beatsPerBar = parseInt(beats);
         this.currentBeat = 0;
         this.updateBeatIndicator();
+        this.saveSettings();
     }
 
     setVolume(vol) {
         this.volume = vol / 100;
         document.getElementById('volumeValue').textContent = vol + '%';
+        this.saveSettings();
     }
 
     setSoundType(type) {
         this.soundType = type;
+        this.saveSettings();
     }
 
     setRhythmPattern(pattern) {
         this.rhythmPattern = pattern;
+        this.saveSettings();
     }
 
     setAnimationType(type) {
@@ -195,6 +252,8 @@ class Metronome {
         } else if (type === 'flash') {
             visualDisplay.classList.add('flash-mode');
         }
+
+        this.saveSettings();
     }
 
     // ビジュアル更新
@@ -362,6 +421,15 @@ class Metronome {
             });
         });
 
+        // リセットボタン
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm(languageManager.currentLang === 'ja'
+                ? '設定を初期状態にリセットしますか？'
+                : 'Reset all settings to default?')) {
+                this.resetSettings();
+            }
+        });
+
         // キーボードショートカット
         document.addEventListener('keydown', (e) => {
             // スペースキー: 再生/停止
@@ -472,7 +540,8 @@ class LanguageManager {
                 shortcuts: 'キーボードショートカット',
                 shortcutPlay: '再生/停止',
                 shortcutTempo: 'テンポ ±1 (Shift押下で ±10)',
-                shortcutTap: 'タップテンポ'
+                shortcutTap: 'タップテンポ',
+                reset: '設定をリセット'
             },
             en: {
                 title: 'Metronome',
@@ -508,7 +577,8 @@ class LanguageManager {
                 shortcuts: 'Keyboard Shortcuts',
                 shortcutPlay: 'Play/Stop',
                 shortcutTempo: 'Tempo ±1 (Shift for ±10)',
-                shortcutTap: 'Tap Tempo'
+                shortcutTap: 'Tap Tempo',
+                reset: 'Reset Settings'
             }
         };
 
