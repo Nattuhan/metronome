@@ -109,17 +109,21 @@ header h1 {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 1rem;
+    font-size: 0.9rem;
     pointer-events: none;
     z-index: 1;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .toggle-icon.left {
-    left: 6px;
+    left: 8px;
 }
 
 .toggle-icon.right {
-    right: 6px;
+    right: 8px;
 }
 
 /* ビジュアル表示エリア */
