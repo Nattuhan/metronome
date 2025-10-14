@@ -47,6 +47,7 @@ class Metronome {
         this.setTempo(this.tempo);
         this.setBeatsPerBar(this.beatsPerBar);
         this.setVolume(this.volume * 100);
+        document.getElementById('beatsPerBar').value = this.beatsPerBar;
         document.getElementById('soundType').value = this.soundType;
         document.getElementById('rhythmPattern').value = this.rhythmPattern;
         document.getElementById('animationType').value = this.animationType;
