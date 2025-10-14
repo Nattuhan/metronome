@@ -4,6 +4,7 @@ class Metronome {
         this.audioContext = null;
         this.isPlaying = false;
         this.currentBeat = 0;
+        this.totalBeats = 0; // 振り子アニメーション用のグローバルカウンター
 
         // デフォルト設定
         this.defaults = {
@@ -148,9 +149,13 @@ class Metronome {
 
         // ビジュアルフィードバック
         const delay = (time - this.audioContext.currentTime) * 1000;
+        const totalBeatCount = this.totalBeats; // 現在のグローバル拍数をキャプチャ
         setTimeout(() => {
-            this.updateVisuals(isAccent, beatNumber);
+            this.updateVisuals(isAccent, beatNumber, totalBeatCount);
         }, delay);
+
+        // グローバルカウンターをインクリメント
+        this.totalBeats++;
     }
 
     // 次のノートをスケジュール
@@ -184,6 +189,7 @@ class Metronome {
 
         this.isPlaying = true;
         this.currentBeat = 0;
+        this.totalBeats = 0;
         this.nextNoteTime = this.audioContext.currentTime;
         this.timerID = setInterval(() => this.scheduler(), 25);
 
@@ -196,6 +202,7 @@ class Metronome {
         this.isPlaying = false;
         clearInterval(this.timerID);
         this.currentBeat = 0;
+        this.totalBeats = 0;
 
         this.updatePlayButton();
         this.resetVisuals();
@@ -257,7 +264,7 @@ class Metronome {
     }
 
     // ビジュアル更新
-    updateVisuals(isAccent, beatNumber) {
+    updateVisuals(isAccent, beatNumber, totalBeatCount) {
         this.updateBeatIndicator(beatNumber);
 
         const visualDisplay = document.querySelector('.visual-display');
@@ -267,8 +274,8 @@ class Metronome {
         switch(this.animationType) {
             case 'pendulum':
                 const maxAngle = 30;
-                // 拍数に関係なく左右交互に振る
-                const direction = beatNumber % 2 === 0 ? -1 : 1;
+                // グローバルカウンターで左右交互に振る（小節をまたいでも連続）
+                const direction = totalBeatCount % 2 === 0 ? -1 : 1;
                 const angle = maxAngle * direction;
 
                 // トランジション時間を拍の長さに合わせる
