@@ -393,7 +393,6 @@ class ThemeManager {
     constructor() {
         this.currentTheme = localStorage.getItem('theme') || 'dark';
         this.themeToggle = document.getElementById('themeToggle');
-        this.themeIcon = document.querySelector('.theme-icon');
 
         this.init();
     }
@@ -402,8 +401,8 @@ class ThemeManager {
         // 保存されたテーマを適用
         this.applyTheme(this.currentTheme);
 
-        // ボタンのクリックイベント
-        this.themeToggle.addEventListener('click', () => {
+        // チェックボックスの変更イベント
+        this.themeToggle.addEventListener('change', () => {
             this.toggleTheme();
         });
     }
@@ -411,10 +410,10 @@ class ThemeManager {
     applyTheme(theme) {
         if (theme === 'light') {
             document.body.classList.add('light-mode');
-            this.themeIcon.textContent = '🌙';
+            this.themeToggle.checked = true;
         } else {
             document.body.classList.remove('light-mode');
-            this.themeIcon.textContent = '☀️';
+            this.themeToggle.checked = false;
         }
         this.currentTheme = theme;
     }

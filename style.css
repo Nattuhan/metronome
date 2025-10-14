@@ -16,9 +16,9 @@ body {
 }
 
 .container {
-    background: white;
+    background: #1a1a1a;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     max-width: 800px;
     width: 100%;
     padding: 30px;
@@ -32,39 +32,70 @@ header {
 
 header h1 {
     font-size: 2.5rem;
-    color: #333;
+    color: #f5f5f5;
     font-weight: 700;
 }
 
-/* テーマ切り替えボタン */
-.theme-toggle {
+/* トグルスイッチ */
+.theme-toggle-switch {
     position: absolute;
-    top: 0;
+    top: 5px;
     right: 0;
-    background: transparent;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.theme-toggle:hover {
-    background: rgba(0, 0, 0, 0.05);
-    transform: rotate(20deg);
-}
-
-.theme-icon {
     display: inline-block;
-    transition: transform 0.3s ease;
+    width: 60px;
+    height: 30px;
+}
+
+.theme-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #555;
+    transition: 0.3s;
+    border-radius: 30px;
+    border: 2px solid #777;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: #ddd;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.theme-toggle-switch input:checked + .toggle-slider {
+    background-color: #e0e0e0;
+    border-color: #ccc;
+}
+
+.theme-toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(30px);
+    background-color: #666;
+}
+
+.theme-toggle-switch:hover .toggle-slider {
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
 /* ビジュアル表示エリア */
 .visual-display {
     position: relative;
     height: 300px;
-    background: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+    background: linear-gradient(to bottom, #2c2c2c, #222);
     border-radius: 15px;
     margin-bottom: 30px;
     overflow: hidden;
@@ -90,7 +121,7 @@ header h1 {
 .pendulum {
     width: 4px;
     height: 200px;
-    background: linear-gradient(to top, #333 0%, #333 80%, transparent 80%);
+    background: linear-gradient(to top, #ddd 0%, #ddd 80%, transparent 80%);
     transform-origin: bottom center;
     position: relative;
 }
@@ -103,7 +134,7 @@ header h1 {
     transform: translateX(-50%);
     width: 30px;
     height: 30px;
-    background: #555;
+    background: #bbb;
     border-radius: 50%;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
@@ -122,9 +153,9 @@ header h1 {
 .bpm-display {
     font-size: 4rem;
     font-weight: 700;
-    color: #333;
+    color: #f5f5f5;
     z-index: 10;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .bpm-display.flash {
@@ -132,7 +163,7 @@ header h1 {
 }
 
 @keyframes flashBPM {
-    0%, 100% { transform: scale(1); color: #333; }
+    0%, 100% { transform: scale(1); color: #f5f5f5; }
     50% { transform: scale(1.1); color: #ff6b6b; }
 }
 
@@ -142,11 +173,11 @@ header h1 {
     bottom: 20px;
     font-size: 1.5rem;
     font-weight: 600;
-    color: #495057;
-    background: white;
+    color: #f5f5f5;
+    background: rgba(0, 0, 0, 0.3);
     padding: 8px 20px;
     border-radius: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* コントロールパネル */
@@ -164,7 +195,7 @@ header h1 {
 
 .control-group label {
     font-weight: 600;
-    color: #495057;
+    color: #ccc;
     font-size: 0.95rem;
 }
 
@@ -208,9 +239,9 @@ header h1 {
 }
 
 .btn-secondary {
-    background: white;
-    color: #333;
-    border: 2px solid #333;
+    background: #2c2c2c;
+    color: #f5f5f5;
+    border: 2px solid #555;
     padding: 15px 30px;
     font-size: 1rem;
     font-weight: 600;
@@ -220,7 +251,7 @@ header h1 {
 }
 
 .btn-secondary:hover {
-    background: #333;
+    background: #555;
     color: white;
     transform: translateY(-2px);
 }
@@ -231,10 +262,12 @@ header h1 {
     padding: 5px 10px;
     font-size: 1.1rem;
     font-weight: 600;
-    border: 2px solid #dee2e6;
+    border: 2px solid #444;
     border-radius: 8px;
     text-align: center;
     margin-left: 10px;
+    background: #2c2c2c;
+    color: #f5f5f5;
 }
 
 /* スライダー */
@@ -242,7 +275,7 @@ header h1 {
     width: 100%;
     height: 8px;
     border-radius: 5px;
-    background: #dee2e6;
+    background: #444;
     outline: none;
     -webkit-appearance: none;
 }
@@ -253,47 +286,48 @@ header h1 {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #333;
+    background: #bbb;
     cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
 }
 
 .slider::-webkit-slider-thumb:hover {
     transform: scale(1.2);
-    background: #555;
+    background: #ddd;
 }
 
 .slider::-moz-range-thumb {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #333;
+    background: #bbb;
     cursor: pointer;
     border: none;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
 }
 
 .slider::-moz-range-thumb:hover {
     transform: scale(1.2);
-    background: #555;
+    background: #ddd;
 }
 
 /* セレクト入力 */
 .select-input {
     padding: 10px 15px;
     font-size: 1rem;
-    border: 2px solid #dee2e6;
+    border: 2px solid #444;
     border-radius: 8px;
-    background: white;
+    background: #2c2c2c;
+    color: #f5f5f5;
     cursor: pointer;
     transition: border-color 0.3s ease;
 }
 
 .select-input:focus {
     outline: none;
-    border-color: #333;
+    border-color: #666;
 }
 
 /* プリセットボタン */
@@ -307,26 +341,27 @@ header h1 {
     flex: 1;
     min-width: 120px;
     padding: 10px 15px;
-    background: #f8f9fa;
-    border: 2px solid #dee2e6;
+    background: #2c2c2c;
+    border: 2px solid #444;
     border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 600;
+    color: #ccc;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .btn-preset:hover {
-    background: #333;
+    background: #444;
     color: white;
-    border-color: #333;
+    border-color: #666;
     transform: translateY(-2px);
 }
 
 /* 音量表示 */
 #volumeValue {
     font-weight: 600;
-    color: #333;
+    color: #ccc;
     margin-left: 10px;
 }
 
@@ -334,7 +369,7 @@ header h1 {
 footer {
     margin-top: 30px;
     padding-top: 20px;
-    border-top: 2px solid #e9ecef;
+    border-top: 2px solid #333;
 }
 
 .shortcuts {
@@ -343,7 +378,7 @@ footer {
 
 .shortcuts h3 {
     font-size: 1.1rem;
-    color: #495057;
+    color: #ccc;
     margin-bottom: 10px;
 }
 
@@ -357,17 +392,18 @@ footer {
 
 .shortcuts li {
     font-size: 0.9rem;
-    color: #6c757d;
+    color: #999;
 }
 
 kbd {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
+    background: #2c2c2c;
+    border: 1px solid #444;
     border-radius: 4px;
     padding: 2px 8px;
     font-family: monospace;
     font-weight: 600;
-    box-shadow: 0 2px 0 #dee2e6;
+    color: #ccc;
+    box-shadow: 0 2px 0 #333;
 }
 
 /* レスポンシブ対応 */
@@ -431,7 +467,7 @@ kbd {
 }
 
 .visual-display.flash-mode.flash-active {
-    background: linear-gradient(to bottom, #555, #333);
+    background: linear-gradient(to bottom, #444, #222);
 }
 
 .visual-display.flash-mode.flash-active .bpm-display {
@@ -440,100 +476,157 @@ kbd {
 
 /* ライトモード */
 body.light-mode {
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
 }
 
 body.light-mode .container {
     background: #ffffff;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode header h1 {
+    color: #333;
 }
 
 body.light-mode .visual-display {
-    background: linear-gradient(to bottom, #ffffff, #f5f5f5);
+    background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
 }
 
 body.light-mode .beat-indicator {
-    background: #f8f9fa;
+    background: rgba(255, 255, 255, 0.8);
     color: #333;
 }
 
-body.light-mode .btn-primary {
-    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+body.light-mode .bpm-display {
     color: #333;
+}
+
+body.light-mode .bpm-display.flash {
+    animation: flashBPMLightMode 0.15s ease-out;
+}
+
+@keyframes flashBPMLightMode {
+    0%, 100% { transform: scale(1); color: #333; }
+    50% { transform: scale(1.1); color: #ff6b6b; }
+}
+
+body.light-mode .control-group label {
+    color: #555;
+}
+
+body.light-mode .btn-primary {
+    background: linear-gradient(135deg, #333 0%, #555 100%);
+    color: white;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 body.light-mode .btn-primary:hover {
-    background: linear-gradient(135deg, #e8e8e8 0%, #d5d5d5 100%);
+    background: linear-gradient(135deg, #444 0%, #666 100%);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 body.light-mode .btn-primary.playing {
-    background: linear-gradient(135deg, #e0e0e0 0%, #cccccc 100%);
+    background: linear-gradient(135deg, #1a1a1a 0%, #2c2c2c 100%);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
 }
 
 body.light-mode .btn-secondary {
     background: #f8f9fa;
     color: #333;
-    border-color: #dee2e6;
+    border-color: #ccc;
 }
 
 body.light-mode .btn-secondary:hover {
-    background: #e9ecef;
+    background: #e0e0e0;
     color: #333;
-    border-color: #adb5bd;
+    border-color: #999;
 }
 
-body.light-mode .btn-preset {
-    background: #ffffff;
-    border-color: #dee2e6;
-}
-
-body.light-mode .btn-preset:hover {
+body.light-mode .tempo-input {
     background: #f8f9fa;
     color: #333;
-    border-color: #adb5bd;
+    border-color: #ccc;
+}
+
+body.light-mode .slider {
+    background: #ddd;
 }
 
 body.light-mode .slider::-webkit-slider-thumb {
-    background: #999;
+    background: #666;
 }
 
 body.light-mode .slider::-webkit-slider-thumb:hover {
-    background: #777;
+    background: #444;
 }
 
 body.light-mode .slider::-moz-range-thumb {
-    background: #999;
+    background: #666;
 }
 
 body.light-mode .slider::-moz-range-thumb:hover {
-    background: #777;
+    background: #444;
 }
 
-body.light-mode .pendulum {
-    background: linear-gradient(to top, #888 0%, #888 80%, transparent 80%);
-}
-
-body.light-mode .pendulum::after {
-    background: #aaa;
+body.light-mode .select-input {
+    background: #f8f9fa;
+    color: #333;
+    border-color: #ccc;
 }
 
 body.light-mode .select-input:focus {
     border-color: #999;
 }
 
-body.light-mode .theme-toggle:hover {
-    background: rgba(0, 0, 0, 0.08);
+body.light-mode .btn-preset {
+    background: #f8f9fa;
+    border-color: #ccc;
+    color: #555;
+}
+
+body.light-mode .btn-preset:hover {
+    background: #e0e0e0;
+    color: #333;
+    border-color: #999;
+}
+
+body.light-mode .pendulum {
+    background: linear-gradient(to top, #666 0%, #666 80%, transparent 80%);
+}
+
+body.light-mode .pendulum::after {
+    background: #888;
+}
+
+body.light-mode .theme-toggle-switch:hover .toggle-slider {
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
 }
 
 body.light-mode #volumeValue {
-    color: #666;
+    color: #555;
+}
+
+body.light-mode footer {
+    border-top-color: #ddd;
+}
+
+body.light-mode .shortcuts h3 {
+    color: #555;
+}
+
+body.light-mode .shortcuts li {
+    color: #777;
+}
+
+body.light-mode kbd {
+    background: #f8f9fa;
+    border-color: #ccc;
+    color: #555;
+    box-shadow: 0 2px 0 #ddd;
 }
 
 body.light-mode .visual-display.flash-mode.flash-active {
-    background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+    background: linear-gradient(to bottom, #ddd, #ccc);
 }
 
 body.light-mode .visual-display.flash-mode.flash-active .bpm-display {
