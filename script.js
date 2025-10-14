@@ -261,16 +261,13 @@ class Metronome {
     updatePlayButton() {
         const playBtn = document.getElementById('playBtn');
         const playIcon = document.getElementById('playIcon');
-        const playText = document.getElementById('playText');
 
         if (this.isPlaying) {
             playBtn.classList.add('playing');
             playIcon.textContent = '■';
-            playText.textContent = 'ストップ';
         } else {
             playBtn.classList.remove('playing');
             playIcon.textContent = '▶';
-            playText.textContent = 'スタート';
         }
     }
 
@@ -367,16 +364,18 @@ class Metronome {
                 this.toggle();
             }
 
-            // 上矢印: テンポ+1
+            // 上矢印: テンポ+1 (Shift押下時は+10)
             if (e.code === 'ArrowUp') {
                 e.preventDefault();
-                this.setTempo(this.tempo + 1);
+                const step = e.shiftKey ? 10 : 1;
+                this.setTempo(this.tempo + step);
             }
 
-            // 下矢印: テンポ-1
+            // 下矢印: テンポ-1 (Shift押下時は-10)
             if (e.code === 'ArrowDown') {
                 e.preventDefault();
-                this.setTempo(this.tempo - 1);
+                const step = e.shiftKey ? 10 : 1;
+                this.setTempo(this.tempo - step);
             }
 
             // Tキー: タップテンポ
@@ -425,12 +424,150 @@ class ThemeManager {
     }
 }
 
+// 言語管理クラス
+class LanguageManager {
+    constructor() {
+        this.currentLang = localStorage.getItem('language') || 'ja';
+        this.langToggle = document.getElementById('langToggle');
+
+        // 翻訳辞書
+        this.translations = {
+            ja: {
+                title: 'Metronome',
+                start: 'スタート',
+                tapTempo: 'タップテンポ',
+                tempo: 'テンポ',
+                timeSignature: '拍子',
+                beats1: '1拍',
+                beats2: '2拍',
+                beats3: '3拍',
+                beats4: '4拍',
+                beats5: '5拍',
+                beats6: '6拍',
+                beats7: '7拍',
+                beats8: '8拍',
+                rhythm: 'リズムパターン',
+                simple: 'シンプル',
+                eighth: '8分音符',
+                triplet: '3連符',
+                sixteenth: '16分音符',
+                sound: '音色',
+                soundClick: 'クリック',
+                soundBeep: 'ビープ',
+                soundWood: 'ウッド',
+                soundCowbell: 'カウベル',
+                volume: '音量',
+                animation: 'アニメーション',
+                pendulum: '振り子',
+                pulse: 'パルス',
+                flash: '点滅',
+                none: 'なし',
+                presets: 'プリセット',
+                shortcuts: 'キーボードショートカット',
+                shortcutPlay: '再生/停止',
+                shortcutTempo: 'テンポ ±1 (Shift押下で ±10)',
+                shortcutTap: 'タップテンポ'
+            },
+            en: {
+                title: 'Metronome',
+                start: 'Start',
+                tapTempo: 'Tap Tempo',
+                tempo: 'Tempo',
+                timeSignature: 'Time Signature',
+                beats1: '1 beat',
+                beats2: '2 beats',
+                beats3: '3 beats',
+                beats4: '4 beats',
+                beats5: '5 beats',
+                beats6: '6 beats',
+                beats7: '7 beats',
+                beats8: '8 beats',
+                rhythm: 'Rhythm Pattern',
+                simple: 'Simple',
+                eighth: 'Eighth Notes',
+                triplet: 'Triplets',
+                sixteenth: 'Sixteenth Notes',
+                sound: 'Sound',
+                soundClick: 'Click',
+                soundBeep: 'Beep',
+                soundWood: 'Wood',
+                soundCowbell: 'Cowbell',
+                volume: 'Volume',
+                animation: 'Animation',
+                pendulum: 'Pendulum',
+                pulse: 'Pulse',
+                flash: 'Flash',
+                none: 'None',
+                presets: 'Presets',
+                shortcuts: 'Keyboard Shortcuts',
+                shortcutPlay: 'Play/Stop',
+                shortcutTempo: 'Tempo ±1 (Shift for ±10)',
+                shortcutTap: 'Tap Tempo'
+            }
+        };
+
+        this.init();
+    }
+
+    init() {
+        // 保存された言語を適用
+        this.applyLanguage(this.currentLang);
+
+        // チェックボックスの変更イベント
+        this.langToggle.addEventListener('change', () => {
+            this.toggleLanguage();
+        });
+    }
+
+    applyLanguage(lang) {
+        if (lang === 'en') {
+            this.langToggle.checked = true;
+        } else {
+            this.langToggle.checked = false;
+        }
+        this.currentLang = lang;
+        this.updateTexts();
+    }
+
+    updateTexts() {
+        const translations = this.translations[this.currentLang];
+
+        // data-i18n属性を持つすべての要素を更新
+        document.querySelectorAll('[data-i18n]').forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            if (translations[key]) {
+                if (element.tagName === 'OPTION') {
+                    element.textContent = translations[key];
+                } else if (element.tagName === 'INPUT') {
+                    element.value = translations[key];
+                } else {
+                    element.textContent = translations[key];
+                }
+            }
+        });
+
+        // 再生ボタンのテキストを更新
+        const playText = document.getElementById('playText');
+        if (playText) {
+            playText.textContent = translations.start;
+        }
+    }
+
+    toggleLanguage() {
+        const newLang = this.currentLang === 'ja' ? 'en' : 'ja';
+        this.applyLanguage(newLang);
+        localStorage.setItem('language', newLang);
+    }
+}
+
 // アプリケーション初期化
 let metronome;
 let themeManager;
+let languageManager;
 
 window.addEventListener('DOMContentLoaded', () => {
     metronome = new Metronome();
     themeManager = new ThemeManager();
+    languageManager = new LanguageManager();
     console.log('メトロノームアプリが起動しました');
 });

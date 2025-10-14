@@ -3,17 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Audio メトロノーム</title>
+    <title>Metronome</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Web Audio メトロノーム</h1>
-            <label class="theme-toggle-switch">
-                <input type="checkbox" id="themeToggle">
-                <span class="toggle-slider"></span>
-            </label>
+            <h1 data-i18n="title">Metronome</h1>
+            <div class="header-controls">
+                <label class="theme-toggle-switch" title="Theme">
+                    <span class="toggle-icon left">🌙</span>
+                    <input type="checkbox" id="themeToggle">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-icon right">☀️</span>
+                </label>
+                <label class="lang-toggle-switch" title="Language">
+                    <span class="toggle-icon left">🇯🇵</span>
+                    <input type="checkbox" id="langToggle">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-icon right">🇺🇸</span>
+                </label>
+            </div>
         </header>
 
         <main>
@@ -32,15 +42,15 @@
                 <div class="play-controls">
                     <button id="playBtn" class="btn-primary">
                         <span id="playIcon">▶</span>
-                        <span id="playText">スタート</span>
+                        <span id="playText" data-i18n="start">Start</span>
                     </button>
-                    <button id="tapBtn" class="btn-secondary">タップテンポ</button>
+                    <button id="tapBtn" class="btn-secondary" data-i18n="tapTempo">Tap Tempo</button>
                 </div>
 
                 <!-- テンポ設定 -->
                 <div class="control-group">
                     <label for="tempoSlider">
-                        テンポ (BPM)
+                        <span data-i18n="tempo">Tempo</span> (BPM)
                         <input type="number" id="tempoInput" min="1" max="300" value="120" class="tempo-input">
                     </label>
                     <input type="range" id="tempoSlider" min="1" max="300" value="120" step="1" class="slider">
@@ -48,64 +58,64 @@
 
                 <!-- 拍子設定 -->
                 <div class="control-group">
-                    <label>拍子</label>
+                    <label data-i18n="timeSignature">Time Signature</label>
                     <div class="beat-controls">
                         <select id="beatsPerBar" class="select-input">
-                            <option value="1">1拍</option>
-                            <option value="2">2拍</option>
-                            <option value="3">3拍</option>
-                            <option value="4" selected>4拍</option>
-                            <option value="5">5拍</option>
-                            <option value="6">6拍</option>
-                            <option value="7">7拍</option>
-                            <option value="8">8拍</option>
+                            <option value="1" data-i18n="beats1">1 beat</option>
+                            <option value="2" data-i18n="beats2">2 beats</option>
+                            <option value="3" data-i18n="beats3">3 beats</option>
+                            <option value="4" selected data-i18n="beats4">4 beats</option>
+                            <option value="5" data-i18n="beats5">5 beats</option>
+                            <option value="6" data-i18n="beats6">6 beats</option>
+                            <option value="7" data-i18n="beats7">7 beats</option>
+                            <option value="8" data-i18n="beats8">8 beats</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- リズムパターン -->
                 <div class="control-group">
-                    <label>リズムパターン</label>
+                    <label data-i18n="rhythm">Rhythm Pattern</label>
                     <select id="rhythmPattern" class="select-input">
-                        <option value="simple" selected>シンプル</option>
-                        <option value="eighth">8分音符</option>
-                        <option value="triplet">3連符</option>
-                        <option value="sixteenth">16分音符</option>
+                        <option value="simple" selected data-i18n="simple">Simple</option>
+                        <option value="eighth" data-i18n="eighth">Eighth Notes</option>
+                        <option value="triplet" data-i18n="triplet">Triplets</option>
+                        <option value="sixteenth" data-i18n="sixteenth">Sixteenth Notes</option>
                     </select>
                 </div>
 
                 <!-- 音色設定 -->
                 <div class="control-group">
-                    <label>音色</label>
+                    <label data-i18n="sound">Sound</label>
                     <select id="soundType" class="select-input">
-                        <option value="click" selected>クリック</option>
-                        <option value="beep">ビープ</option>
-                        <option value="wood">ウッド</option>
-                        <option value="cowbell">カウベル</option>
+                        <option value="click" selected data-i18n="soundClick">Click</option>
+                        <option value="beep" data-i18n="soundBeep">Beep</option>
+                        <option value="wood" data-i18n="soundWood">Wood</option>
+                        <option value="cowbell" data-i18n="soundCowbell">Cowbell</option>
                     </select>
                 </div>
 
                 <!-- 音量設定 -->
                 <div class="control-group">
-                    <label for="volumeSlider">音量</label>
+                    <label for="volumeSlider" data-i18n="volume">Volume</label>
                     <input type="range" id="volumeSlider" min="0" max="100" value="70" step="1" class="slider">
                     <span id="volumeValue">70%</span>
                 </div>
 
                 <!-- アニメーション設定 -->
                 <div class="control-group">
-                    <label>アニメーション</label>
+                    <label data-i18n="animation">Animation</label>
                     <select id="animationType" class="select-input">
-                        <option value="pendulum" selected>振り子</option>
-                        <option value="pulse">拡大縮小</option>
-                        <option value="flash">点滅</option>
-                        <option value="none">なし</option>
+                        <option value="pendulum" selected data-i18n="pendulum">Pendulum</option>
+                        <option value="pulse" data-i18n="pulse">Pulse</option>
+                        <option value="flash" data-i18n="flash">Flash</option>
+                        <option value="none" data-i18n="none">None</option>
                     </select>
                 </div>
 
                 <!-- プリセット -->
                 <div class="control-group">
-                    <label>プリセット</label>
+                    <label data-i18n="presets">Presets</label>
                     <div class="preset-buttons">
                         <button class="btn-preset" data-bpm="60">Largo (60)</button>
                         <button class="btn-preset" data-bpm="80">Andante (80)</button>
@@ -119,11 +129,11 @@
 
         <footer>
             <div class="shortcuts">
-                <h3>キーボードショートカット</h3>
+                <h3 data-i18n="shortcuts">Keyboard Shortcuts</h3>
                 <ul>
-                    <li><kbd>Space</kbd> - 再生/停止</li>
-                    <li><kbd>↑</kbd> / <kbd>↓</kbd> - テンポ調整 (±1)</li>
-                    <li><kbd>T</kbd> - タップテンポ</li>
+                    <li><kbd>Space</kbd> - <span data-i18n="shortcutPlay">Play/Stop</span></li>
+                    <li><kbd>↑</kbd> / <kbd>↓</kbd> - <span data-i18n="shortcutTempo">Tempo ±1</span></li>
+                    <li><kbd>T</kbd> - <span data-i18n="shortcutTap">Tap Tempo</span></li>
                 </ul>
             </div>
         </footer>
