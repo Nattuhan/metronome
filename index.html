@@ -60,46 +60,46 @@
                     </div>
 
                     <!-- テンポ設定 -->
-                    <div class="control-group section-divider">
-                    <label for="tempoSlider">
-                        <span data-i18n="tempo">Tempo</span> (BPM)
-                        <input type="number" id="tempoInput" min="1" max="300" value="120" class="tempo-input">
-                    </label>
-                    <input type="range" id="tempoSlider" min="1" max="300" value="120" step="1" class="slider">
-                </div>
-
-                <!-- 拍子設定 -->
-                <div class="control-group section-divider">
-                    <label data-i18n="timeSignature">Time Signature</label>
-                    <div class="beat-controls">
-                        <select id="beatsPerBar" class="select-input">
-                            <option value="1" data-i18n="beats1">1 beat</option>
-                            <option value="2" data-i18n="beats2">2 beats</option>
-                            <option value="3" data-i18n="beats3">3 beats</option>
-                            <option value="4" selected data-i18n="beats4">4 beats</option>
-                            <option value="5" data-i18n="beats5">5 beats</option>
-                            <option value="6" data-i18n="beats6">6 beats</option>
-                            <option value="7" data-i18n="beats7">7 beats</option>
-                            <option value="8" data-i18n="beats8">8 beats</option>
-                        </select>
+                    <div class="control-group">
+                        <label for="tempoSlider">
+                            <span data-i18n="tempo">Tempo</span> (BPM)
+                            <input type="number" id="tempoInput" min="1" max="300" value="120" class="tempo-input">
+                        </label>
+                        <input type="range" id="tempoSlider" min="1" max="300" value="120" step="1" class="slider">
                     </div>
-                </div>
 
-                <!-- リズムパターン -->
-                <div class="control-group section-divider">
-                    <label data-i18n="rhythm">Rhythm Pattern</label>
-                    <select id="rhythmPattern" class="select-input">
-                        <option value="simple" selected data-i18n="simple">Simple</option>
-                        <option value="eighth" data-i18n="eighth">Eighth Notes</option>
-                        <option value="triplet" data-i18n="triplet">Triplets</option>
-                        <option value="sixteenth" data-i18n="sixteenth">Sixteenth Notes</option>
-                        <option value="sextuplet" data-i18n="sextuplet">Sextuplets</option>
-                    </select>
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="subdivisionSound" class="checkbox-input">
-                        <span data-i18n="subdivisionSound">Different sound for subdivisions</span>
-                    </label>
-                </div>
+                    <!-- 拍子とリズムパターン -->
+                    <div class="control-group section-divider">
+                        <div class="beat-rhythm-row">
+                            <div class="beat-section">
+                                <label data-i18n="timeSignature">Time Signature</label>
+                                <select id="beatsPerBar" class="select-input">
+                                    <option value="1" data-i18n="beats1">1 beat</option>
+                                    <option value="2" data-i18n="beats2">2 beats</option>
+                                    <option value="3" data-i18n="beats3">3 beats</option>
+                                    <option value="4" selected data-i18n="beats4">4 beats</option>
+                                    <option value="5" data-i18n="beats5">5 beats</option>
+                                    <option value="6" data-i18n="beats6">6 beats</option>
+                                    <option value="7" data-i18n="beats7">7 beats</option>
+                                    <option value="8" data-i18n="beats8">8 beats</option>
+                                </select>
+                            </div>
+                            <div class="rhythm-section">
+                                <label data-i18n="rhythm">Rhythm Pattern</label>
+                                <select id="rhythmPattern" class="select-input">
+                                    <option value="simple" selected data-i18n="simple">Simple</option>
+                                    <option value="eighth" data-i18n="eighth">Eighth Notes</option>
+                                    <option value="triplet" data-i18n="triplet">Triplets</option>
+                                    <option value="sixteenth" data-i18n="sixteenth">Sixteenth Notes</option>
+                                    <option value="sextuplet" data-i18n="sextuplet">Sextuplets</option>
+                                </select>
+                            </div>
+                        </div>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="subdivisionSound" class="checkbox-input">
+                            <span data-i18n="subdivisionSound">Different sound for subdivisions</span>
+                        </label>
+                    </div>
 
                 <!-- 音色設定 -->
                 <div class="control-group">
