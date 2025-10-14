@@ -167,8 +167,8 @@ class Metronome {
         osc.stop(time + releaseTime);
     }
 
-    // リズムパターンに基づいたスケジュール
-    scheduleNote(beatNumber, time) {
+    // リズムパターンに基づいて音を再生（共通ロジック）
+    playRhythmPattern(beatNumber, time) {
         const isAccent = (beatNumber % this.beatsPerBar === 0);
 
         switch(this.rhythmPattern) {
@@ -195,6 +195,14 @@ class Metronome {
                 }
                 break;
         }
+    }
+
+    // リズムパターンに基づいたスケジュール
+    scheduleNote(beatNumber, time) {
+        const isAccent = (beatNumber % this.beatsPerBar === 0);
+
+        // 音を再生
+        this.playRhythmPattern(beatNumber, time);
 
         // ビジュアルフィードバック
         const delay = (time - this.audioContext.currentTime) * 1000;
@@ -241,37 +249,10 @@ class Metronome {
         this.totalBeats = 0;
         this.nextNoteTime = this.audioContext.currentTime;
 
-        // すぐに最初の拍を鳴らす（細分化拍も含めてスケジュール）
-        // 1拍目の音
-        const isAccent = true;
-        switch(this.rhythmPattern) {
-            case 'simple':
-                this.playSound(this.audioContext.currentTime, isAccent, false);
-                break;
-            case 'eighth':
-                this.playSound(this.audioContext.currentTime, isAccent, false);
-                this.playSound(this.audioContext.currentTime + (60.0 / this.tempo) / 2, false, true);
-                break;
-            case 'triplet':
-                this.playSound(this.audioContext.currentTime, isAccent, false);
-                this.playSound(this.audioContext.currentTime + (60.0 / this.tempo) / 3, false, true);
-                this.playSound(this.audioContext.currentTime + (60.0 / this.tempo) * 2 / 3, false, true);
-                break;
-            case 'sixteenth':
-                for(let i = 0; i < 4; i++) {
-                    this.playSound(this.audioContext.currentTime + (60.0 / this.tempo) * i / 4, isAccent && i === 0, i > 0);
-                }
-                break;
-            case 'sextuplet':
-                for(let i = 0; i < 6; i++) {
-                    this.playSound(this.audioContext.currentTime + (60.0 / this.tempo) * i / 6, isAccent && i === 0, i > 0);
-                }
-                break;
-        }
-
-        // ビジュアルを即座に更新（totalBeatCountを1にして右側に動かす）
-        this.updateVisuals(true, 0, 1);
-        // totalBeatsは次のscheduleNoteで1になるように0のまま
+        // 1拍目を即座に再生（音とビジュアル）
+        this.playRhythmPattern(0, this.audioContext.currentTime);
+        this.updateVisuals(true, 0, 1); // totalBeatCount=1で右側に動かす
+        // totalBeatsは0のまま（次のscheduleNoteで1になる）
 
         // 次の拍のスケジュール時間を設定
         const secondsPerBeat = 60.0 / this.tempo;
