@@ -4,7 +4,7 @@
 
 ## デモ
 
-🔗 [デモページを見る](https://yourusername.github.io/metronome/)
+🔗 [デモページを見る](https://nattuhan.github.io/metronome/)
 
 ## 特徴
 
@@ -68,7 +68,7 @@
 ローカルで使用する場合は、ファイルをダウンロードしてブラウザで開くだけです。
 
 ```bash
-git clone https://github.com/yourusername/metronome.git
+git clone https://github.com/Nattuhan/metronome.git
 cd metronome
 # index.htmlをブラウザで開く
 ```
