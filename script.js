@@ -732,15 +732,6 @@ class Metronome {
         this.renderPresetsList();
     }
 
-    renamePreset(presetId, newName) {
-        const preset = this.customPresets.find(p => p.id === presetId);
-        if (!preset) return;
-
-        preset.name = newName.trim();
-        this.saveCustomPresets();
-        this.renderPresetsList();
-    }
-
     getRhythmPatternName(pattern) {
         const lang = localStorage.getItem('language') || 'ja';
         const translationsMap = {
@@ -793,42 +784,6 @@ class Metronome {
             const name = document.createElement('div');
             name.className = 'preset-name';
             name.textContent = preset.name;
-            name.contentEditable = false;
-
-            // 名前ダブルクリックでリネーム
-            name.addEventListener('dblclick', (e) => {
-                e.stopPropagation();
-                name.contentEditable = true;
-                name.classList.add('editing');
-                name.focus();
-                // テキストを全選択
-                const range = document.createRange();
-                range.selectNodeContents(name);
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-            });
-
-            name.addEventListener('blur', () => {
-                name.contentEditable = false;
-                name.classList.remove('editing');
-                const newName = name.textContent.trim();
-                if (newName && newName !== preset.name) {
-                    this.renamePreset(preset.id, newName);
-                } else {
-                    name.textContent = preset.name;
-                }
-            });
-
-            name.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    name.blur();
-                } else if (e.key === 'Escape') {
-                    name.textContent = preset.name;
-                    name.blur();
-                }
-            });
 
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'preset-delete-btn';

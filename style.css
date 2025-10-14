@@ -261,15 +261,6 @@ main {
     font-weight: 600;
     color: #f5f5f5;
     font-size: 0.95rem;
-    cursor: text;
-}
-
-.preset-name.editing {
-    background: #1a1a1a;
-    border: 1px solid #666;
-    border-radius: 4px;
-    padding: 2px 6px;
-    outline: none;
 }
 
 .preset-delete-btn {
@@ -1089,11 +1080,6 @@ body.light-mode .preset-item.active {
 
 body.light-mode .preset-name {
     color: #333;
-}
-
-body.light-mode .preset-name.editing {
-    background: #ffffff;
-    border-color: #999;
 }
 
 body.light-mode .preset-info-label {
