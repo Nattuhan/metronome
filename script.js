@@ -271,7 +271,7 @@ class Metronome {
 
         // ビジュアルを即座に更新（totalBeatCountを1にして右側に動かす）
         this.updateVisuals(true, 0, 1);
-        this.totalBeats = 1; // グローバルカウンターを1に設定
+        // totalBeatsは次のscheduleNoteで1になるように0のまま
 
         // 次の拍のスケジュール時間を設定
         const secondsPerBeat = 60.0 / this.tempo;
