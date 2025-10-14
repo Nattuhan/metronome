@@ -240,6 +240,11 @@ class Metronome {
         this.currentBeat = 0;
         this.totalBeats = 0;
         this.nextNoteTime = this.audioContext.currentTime;
+
+        // すぐに最初の拍を鳴らしてビジュアルを更新
+        this.scheduleNote(0, this.audioContext.currentTime);
+        this.nextNote();
+
         this.timerID = setInterval(() => this.scheduler(), 25);
 
         // タイマーが有効な場合、カウントダウンを開始
@@ -965,7 +970,7 @@ class LanguageManager {
                 minutes: '分',
                 seconds: '秒',
                 timerEnabled: 'タイマーを有効にする',
-                savedPresets: '保存したプリセット',
+                savedPresets: 'プリセット',
                 savePreset: '+ 保存'
             },
             en: {
@@ -1010,7 +1015,7 @@ class LanguageManager {
                 minutes: 'min',
                 seconds: 'sec',
                 timerEnabled: 'Enable timer',
-                savedPresets: 'Saved Presets',
+                savedPresets: 'Presets',
                 savePreset: '+ Save'
             }
         };
