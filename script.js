@@ -275,6 +275,7 @@ class Metronome {
             case 'pendulum':
                 const maxAngle = 30;
                 // グローバルカウンターで左右交互に振る（小節をまたいでも連続）
+                // 初期位置を左側(-30deg)にするため、偶数で左(-1)、奇数で右(1)
                 const direction = totalBeatCount % 2 === 0 ? -1 : 1;
                 const angle = maxAngle * direction;
 
@@ -307,7 +308,7 @@ class Metronome {
 
     resetVisuals() {
         const pendulum = document.getElementById('pendulum');
-        pendulum.style.transform = 'rotate(0deg)';
+        pendulum.style.transform = 'rotate(-30deg)'; // 初期位置を左側に
         pendulum.classList.remove('accent');
 
         const bpmDisplay = document.getElementById('bpm-display');

@@ -160,6 +160,7 @@ header h1 {
     background: linear-gradient(to top, #ddd 0%, #ddd 80%, transparent 80%);
     transform-origin: bottom center;
     position: relative;
+    transform: rotate(-30deg); /* 初期位置を左側に */
 }
 
 .pendulum::after {
