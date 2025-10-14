@@ -34,6 +34,13 @@ class Metronome {
         this.tapTimes = [];
         this.tapTimeout = null;
 
+        // タイマー機能
+        this.timerEnabled = false;
+        this.timerMinutes = 0;
+        this.timerSeconds = 0;
+        this.timerRemaining = 0; // 残り時間（秒）
+        this.timerInterval = null;
+
         this.initAudioContext();
         this.loadSettings();
         this.initEventListeners();
@@ -230,6 +237,11 @@ class Metronome {
         this.nextNoteTime = this.audioContext.currentTime;
         this.timerID = setInterval(() => this.scheduler(), 25);
 
+        // タイマーが有効な場合、カウントダウンを開始
+        if (this.timerEnabled) {
+            this.startTimer();
+        }
+
         this.updatePlayButton();
     }
 
@@ -240,6 +252,9 @@ class Metronome {
         clearInterval(this.timerID);
         this.currentBeat = 0;
         this.totalBeats = 0;
+
+        // タイマーを停止
+        this.stopTimer();
 
         this.updatePlayButton();
         this.resetVisuals();
@@ -412,6 +427,97 @@ class Metronome {
         }
     }
 
+    // タイマー機能
+    startTimer() {
+        // 残り時間を計算（分と秒から秒数に変換）
+        this.timerRemaining = this.timerMinutes * 60 + this.timerSeconds;
+
+        if (this.timerRemaining <= 0) {
+            return;
+        }
+
+        this.updateTimerDisplay();
+
+        // 1秒ごとにカウントダウン
+        this.timerInterval = setInterval(() => {
+            this.timerRemaining--;
+            this.updateTimerDisplay();
+
+            // 残り10秒以下で警告表示
+            const timerDisplay = document.getElementById('timerDisplay');
+            if (this.timerRemaining <= 10 && this.timerRemaining > 0) {
+                timerDisplay.classList.add('warning');
+            }
+
+            // タイマー終了
+            if (this.timerRemaining <= 0) {
+                this.onTimerComplete();
+            }
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+
+        const timerDisplay = document.getElementById('timerDisplay');
+        timerDisplay.classList.remove('warning');
+
+        // タイマーを初期表示に戻す
+        if (this.timerEnabled) {
+            const totalSeconds = this.timerMinutes * 60 + this.timerSeconds;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        } else {
+            timerDisplay.textContent = '--:--';
+        }
+    }
+
+    updateTimerDisplay() {
+        const minutes = Math.floor(this.timerRemaining / 60);
+        const seconds = this.timerRemaining % 60;
+        const timerDisplay = document.getElementById('timerDisplay');
+        timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    onTimerComplete() {
+        // タイマー終了処理
+        this.stopTimer();
+        this.stop(); // メトロノームを停止
+
+        // アラーム音を鳴らす（短く3回）
+        this.playAlarm();
+    }
+
+    playAlarm() {
+        const alarmTimes = [0, 0.15, 0.3]; // 3回のアラーム音
+
+        alarmTimes.forEach(offset => {
+            setTimeout(() => {
+                const osc = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+
+                osc.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+
+                // アラーム音: 高めの周波数で目立つように
+                osc.frequency.value = 1200;
+                osc.type = 'sine';
+                gainNode.gain.value = this.volume * 1.2;
+
+                const now = this.audioContext.currentTime;
+                gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }, offset * 1000);
+        });
+    }
+
     // イベントリスナー初期化
     initEventListeners() {
         // 再生/停止ボタン
@@ -482,6 +588,24 @@ class Metronome {
             }
         });
 
+        // タイマー設定
+        document.getElementById('timerMinutes').addEventListener('input', (e) => {
+            this.timerMinutes = Math.max(0, parseInt(e.target.value) || 0);
+            this.updateTimerPreview();
+        });
+
+        document.getElementById('timerSeconds').addEventListener('input', (e) => {
+            let seconds = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+            e.target.value = seconds;
+            this.timerSeconds = seconds;
+            this.updateTimerPreview();
+        });
+
+        document.getElementById('timerEnabled').addEventListener('change', (e) => {
+            this.timerEnabled = e.target.checked;
+            this.updateTimerPreview();
+        });
+
         // キーボードショートカット
         document.addEventListener('keydown', (e) => {
             // スペースキー: 再生/停止
@@ -510,6 +634,20 @@ class Metronome {
                 this.handleTap();
             }
         });
+    }
+
+    // タイマープレビューを更新
+    updateTimerPreview() {
+        const timerDisplay = document.getElementById('timerDisplay');
+
+        if (this.timerEnabled) {
+            const totalSeconds = this.timerMinutes * 60 + this.timerSeconds;
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        } else {
+            timerDisplay.textContent = '--:--';
+        }
     }
 }
 
@@ -595,7 +733,11 @@ class LanguageManager {
                 shortcutTempo: 'テンポ ±1 (Shift押下で ±10)',
                 shortcutTap: 'タップテンポ',
                 reset: '設定をリセット',
-                subdivisionSound: '細分化拍で別の音を使用'
+                subdivisionSound: '細分化拍で別の音を使用',
+                timer: 'タイマー',
+                minutes: '分',
+                seconds: '秒',
+                timerEnabled: 'タイマーを有効にする'
             },
             en: {
                 title: 'Metronome',
@@ -634,7 +776,11 @@ class LanguageManager {
                 shortcutTempo: 'Tempo ±1 (Shift for ±10)',
                 shortcutTap: 'Tap Tempo',
                 reset: 'Reset Settings',
-                subdivisionSound: 'Different sound for subdivisions'
+                subdivisionSound: 'Different sound for subdivisions',
+                timer: 'Timer',
+                minutes: 'min',
+                seconds: 'sec',
+                timerEnabled: 'Enable timer'
             }
         };
 

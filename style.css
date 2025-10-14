@@ -733,3 +733,85 @@ body.light-mode .visual-display.flash-mode.flash-active {
 body.light-mode .visual-display.flash-mode.flash-active .bpm-display {
     color: #333;
 }
+
+/* タイマーコントロール */
+.timer-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.timer-inputs {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.timer-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timer-input {
+    width: 70px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid #444;
+    border-radius: 8px;
+    text-align: center;
+    background: #2c2c2c;
+    color: #f5f5f5;
+}
+
+.timer-input-group span {
+    color: #ccc;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.timer-display {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f5f5f5;
+    text-align: center;
+    background: #2c2c2c;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 2px solid #444;
+    letter-spacing: 2px;
+}
+
+.timer-display.warning {
+    color: #ff6b6b;
+    border-color: #ff6b6b;
+    animation: timerBlink 0.5s ease-in-out infinite;
+}
+
+@keyframes timerBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ライトモード - タイマー */
+body.light-mode .timer-input {
+    background: #f8f9fa;
+    color: #333;
+    border-color: #ccc;
+}
+
+body.light-mode .timer-input-group span {
+    color: #555;
+}
+
+body.light-mode .timer-display {
+    background: #f8f9fa;
+    color: #333;
+    border-color: #ccc;
+}
+
+body.light-mode .timer-display.warning {
+    color: #d63031;
+    border-color: #ff6b6b;
+}

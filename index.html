@@ -118,6 +118,28 @@
                     </select>
                 </div>
 
+                <!-- タイマー設定 -->
+                <div class="control-group">
+                    <label data-i18n="timer">Timer</label>
+                    <div class="timer-controls">
+                        <div class="timer-inputs">
+                            <div class="timer-input-group">
+                                <input type="number" id="timerMinutes" min="0" max="999" value="0" class="timer-input">
+                                <span data-i18n="minutes">min</span>
+                            </div>
+                            <div class="timer-input-group">
+                                <input type="number" id="timerSeconds" min="0" max="59" value="0" class="timer-input">
+                                <span data-i18n="seconds">sec</span>
+                            </div>
+                        </div>
+                        <div id="timerDisplay" class="timer-display">--:--</div>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="timerEnabled" class="checkbox-input">
+                            <span data-i18n="timerEnabled">Enable timer</span>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- プリセット -->
                 <div class="control-group">
                     <label data-i18n="presets">Presets</label>
