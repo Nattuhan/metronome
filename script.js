@@ -41,9 +41,14 @@ class Metronome {
         this.timerRemaining = 0; // 残り時間（秒）
         this.timerInterval = null;
 
+        // カスタムプリセット
+        this.customPresets = this.loadCustomPresets();
+        this.activePresetId = null;
+
         this.initAudioContext();
         this.loadSettings();
         this.initEventListeners();
+        this.renderPresetsList();
     }
 
     initAudioContext() {
@@ -588,6 +593,11 @@ class Metronome {
             }
         });
 
+        // プリセット保存ボタン
+        document.getElementById('savePresetBtn').addEventListener('click', () => {
+            this.saveCurrentAsPreset();
+        });
+
         // タイマー設定
         document.getElementById('timerMinutes').addEventListener('input', (e) => {
             this.timerMinutes = Math.max(0, parseInt(e.target.value) || 0);
@@ -648,6 +658,211 @@ class Metronome {
         } else {
             timerDisplay.textContent = '--:--';
         }
+    }
+
+    // カスタムプリセット管理
+    loadCustomPresets() {
+        const saved = localStorage.getItem('customPresets');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    saveCustomPresets() {
+        localStorage.setItem('customPresets', JSON.stringify(this.customPresets));
+    }
+
+    saveCurrentAsPreset() {
+        const name = prompt(languageManager.currentLang === 'ja'
+            ? 'プリセット名を入力してください:'
+            : 'Enter preset name:');
+
+        if (!name || name.trim() === '') return;
+
+        const preset = {
+            id: Date.now(),
+            name: name.trim(),
+            tempo: this.tempo,
+            beatsPerBar: this.beatsPerBar,
+            rhythmPattern: this.rhythmPattern
+        };
+
+        this.customPresets.push(preset);
+        this.saveCustomPresets();
+        this.renderPresetsList();
+    }
+
+    loadPreset(presetId) {
+        const preset = this.customPresets.find(p => p.id === presetId);
+        if (!preset) return;
+
+        this.setTempo(preset.tempo);
+        this.setBeatsPerBar(preset.beatsPerBar);
+        this.setRhythmPattern(preset.rhythmPattern);
+
+        // UIを更新
+        document.getElementById('beatsPerBar').value = preset.beatsPerBar;
+        document.getElementById('rhythmPattern').value = preset.rhythmPattern;
+
+        this.activePresetId = presetId;
+        this.renderPresetsList();
+    }
+
+    deletePreset(presetId) {
+        const preset = this.customPresets.find(p => p.id === presetId);
+        if (!preset) return;
+
+        const confirmMsg = languageManager.currentLang === 'ja'
+            ? `「${preset.name}」を削除しますか？`
+            : `Delete "${preset.name}"?`;
+
+        if (!confirm(confirmMsg)) return;
+
+        this.customPresets = this.customPresets.filter(p => p.id !== presetId);
+        if (this.activePresetId === presetId) {
+            this.activePresetId = null;
+        }
+        this.saveCustomPresets();
+        this.renderPresetsList();
+    }
+
+    renamePreset(presetId, newName) {
+        const preset = this.customPresets.find(p => p.id === presetId);
+        if (!preset) return;
+
+        preset.name = newName.trim();
+        this.saveCustomPresets();
+        this.renderPresetsList();
+    }
+
+    getRhythmPatternName(pattern) {
+        const translations = languageManager.translations[languageManager.currentLang];
+        const patterns = {
+            'simple': translations.simple,
+            'eighth': translations.eighth,
+            'triplet': translations.triplet,
+            'sixteenth': translations.sixteenth,
+            'sextuplet': translations.sextuplet
+        };
+        return patterns[pattern] || pattern;
+    }
+
+    renderPresetsList() {
+        const container = document.getElementById('savedPresetsList');
+        container.innerHTML = '';
+
+        if (this.customPresets.length === 0) {
+            const empty = document.createElement('div');
+            empty.style.color = '#888';
+            empty.style.textAlign = 'center';
+            empty.style.padding = '20px 0';
+            empty.style.fontSize = '0.9rem';
+            empty.textContent = languageManager.currentLang === 'ja'
+                ? '保存されたプリセットはありません'
+                : 'No saved presets';
+            container.appendChild(empty);
+            return;
+        }
+
+        this.customPresets.forEach(preset => {
+            const item = document.createElement('div');
+            item.className = 'preset-item';
+            if (preset.id === this.activePresetId) {
+                item.classList.add('active');
+            }
+
+            const header = document.createElement('div');
+            header.className = 'preset-item-header';
+
+            const name = document.createElement('div');
+            name.className = 'preset-name';
+            name.textContent = preset.name;
+            name.contentEditable = false;
+
+            // 名前クリックでリネーム
+            name.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (name.contentEditable === 'false') {
+                    name.contentEditable = true;
+                    name.classList.add('editing');
+                    name.focus();
+                    // テキストを全選択
+                    const range = document.createRange();
+                    range.selectNodeContents(name);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            });
+
+            name.addEventListener('blur', () => {
+                name.contentEditable = false;
+                name.classList.remove('editing');
+                const newName = name.textContent.trim();
+                if (newName && newName !== preset.name) {
+                    this.renamePreset(preset.id, newName);
+                } else {
+                    name.textContent = preset.name;
+                }
+            });
+
+            name.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    name.blur();
+                } else if (e.key === 'Escape') {
+                    name.textContent = preset.name;
+                    name.blur();
+                }
+            });
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'preset-delete-btn';
+            deleteBtn.textContent = '×';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.deletePreset(preset.id);
+            });
+
+            header.appendChild(name);
+            header.appendChild(deleteBtn);
+
+            const info = document.createElement('div');
+            info.className = 'preset-info';
+
+            const tempoRow = document.createElement('div');
+            tempoRow.className = 'preset-info-row';
+            tempoRow.innerHTML = `
+                <span class="preset-info-label">Tempo:</span>
+                <span class="preset-info-value">${preset.tempo} BPM</span>
+            `;
+
+            const beatRow = document.createElement('div');
+            beatRow.className = 'preset-info-row';
+            beatRow.innerHTML = `
+                <span class="preset-info-label">${languageManager.currentLang === 'ja' ? '拍子:' : 'Beats:'}</span>
+                <span class="preset-info-value">${preset.beatsPerBar}/4</span>
+            `;
+
+            const rhythmRow = document.createElement('div');
+            rhythmRow.className = 'preset-info-row';
+            rhythmRow.innerHTML = `
+                <span class="preset-info-label">${languageManager.currentLang === 'ja' ? 'リズム:' : 'Rhythm:'}</span>
+                <span class="preset-info-value">${this.getRhythmPatternName(preset.rhythmPattern)}</span>
+            `;
+
+            info.appendChild(tempoRow);
+            info.appendChild(beatRow);
+            info.appendChild(rhythmRow);
+
+            item.appendChild(header);
+            item.appendChild(info);
+
+            // アイテムクリックでロード
+            item.addEventListener('click', () => {
+                this.loadPreset(preset.id);
+            });
+
+            container.appendChild(item);
+        });
     }
 }
 
@@ -737,7 +952,9 @@ class LanguageManager {
                 timer: 'タイマー',
                 minutes: '分',
                 seconds: '秒',
-                timerEnabled: 'タイマーを有効にする'
+                timerEnabled: 'タイマーを有効にする',
+                savedPresets: '保存したプリセット',
+                savePreset: '+ 保存'
             },
             en: {
                 title: 'Metronome',
@@ -780,7 +997,9 @@ class LanguageManager {
                 timer: 'Timer',
                 minutes: 'min',
                 seconds: 'sec',
-                timerEnabled: 'Enable timer'
+                timerEnabled: 'Enable timer',
+                savedPresets: 'Saved Presets',
+                savePreset: '+ Save'
             }
         };
 
@@ -835,6 +1054,11 @@ class LanguageManager {
         const newLang = this.currentLang === 'ja' ? 'en' : 'ja';
         this.applyLanguage(newLang);
         localStorage.setItem('language', newLang);
+
+        // プリセットリストを再レンダリング（言語が変わったので）
+        if (window.metronome) {
+            metronome.renderPresetsList();
+        }
     }
 }
 
