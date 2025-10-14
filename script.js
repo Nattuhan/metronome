@@ -24,6 +24,7 @@ class Metronome {
         this.rhythmPattern = localStorage.getItem('rhythmPattern') || this.defaults.rhythmPattern;
         this.animationType = localStorage.getItem('animationType') || this.defaults.animationType;
         this.subdivisionSound = localStorage.getItem('subdivisionSound') === 'true';
+        this.subdivisionVolume = (parseInt(localStorage.getItem('subdivisionVolume')) || 50) / 100;
 
         this.noteTime = 0.0;
         this.scheduleAheadTime = 0.1;
@@ -65,6 +66,8 @@ class Metronome {
         document.getElementById('rhythmPattern').value = this.rhythmPattern;
         document.getElementById('animationType').value = this.animationType;
         document.getElementById('subdivisionSound').checked = this.subdivisionSound;
+        this.setSubdivisionVolume(this.subdivisionVolume * 100);
+        this.toggleSubdivisionVolumeControl();
         this.setAnimationType(this.animationType);
     }
 
@@ -77,6 +80,7 @@ class Metronome {
         localStorage.setItem('rhythmPattern', this.rhythmPattern);
         localStorage.setItem('animationType', this.animationType);
         localStorage.setItem('subdivisionSound', this.subdivisionSound);
+        localStorage.setItem('subdivisionVolume', Math.round(this.subdivisionVolume * 100));
     }
 
     // 設定をリセット
@@ -92,6 +96,7 @@ class Metronome {
         this.rhythmPattern = this.defaults.rhythmPattern;
         this.animationType = this.defaults.animationType;
         this.subdivisionSound = false;
+        this.subdivisionVolume = 0.5;
 
         this.loadSettings();
         this.saveSettings();
@@ -107,26 +112,26 @@ class Metronome {
 
         // 細分化された音の場合、別の音を使用
         if (isSubdivision && this.subdivisionSound) {
-            // 弱拍専用の音（より低く、短く、静かに）
+            // 弱拍専用の音（より低く、短く、音量は調整可能）
             switch(this.soundType) {
                 case 'click':
                     osc.frequency.value = 400;
-                    gainNode.gain.value = this.volume * 0.5;
+                    gainNode.gain.value = this.volume * this.subdivisionVolume;
                     osc.type = 'sine';
                     break;
                 case 'beep':
                     osc.frequency.value = 220;
-                    gainNode.gain.value = this.volume * 0.5;
+                    gainNode.gain.value = this.volume * this.subdivisionVolume;
                     osc.type = 'square';
                     break;
                 case 'wood':
                     osc.frequency.value = 100;
-                    gainNode.gain.value = this.volume * 0.4;
+                    gainNode.gain.value = this.volume * this.subdivisionVolume * 0.8;
                     osc.type = 'triangle';
                     break;
                 case 'cowbell':
                     osc.frequency.value = 200;
-                    gainNode.gain.value = this.volume * 0.5;
+                    gainNode.gain.value = this.volume * this.subdivisionVolume;
                     osc.type = 'square';
                     break;
             }
@@ -311,6 +316,22 @@ class Metronome {
         this.volume = vol / 100;
         document.getElementById('volumeValue').textContent = vol + '%';
         this.saveSettings();
+    }
+
+    setSubdivisionVolume(vol) {
+        this.subdivisionVolume = vol / 100;
+        document.getElementById('subdivisionVolumeSlider').value = vol;
+        document.getElementById('subdivisionVolumeValue').textContent = vol + '%';
+        this.saveSettings();
+    }
+
+    toggleSubdivisionVolumeControl() {
+        const control = document.getElementById('subdivisionVolumeControl');
+        if (this.subdivisionSound) {
+            control.style.display = 'block';
+        } else {
+            control.style.display = 'none';
+        }
     }
 
     setSoundType(type) {
@@ -592,7 +613,13 @@ class Metronome {
         // 弱拍音オプション
         document.getElementById('subdivisionSound').addEventListener('change', (e) => {
             this.subdivisionSound = e.target.checked;
+            this.toggleSubdivisionVolumeControl();
             this.saveSettings();
+        });
+
+        // 細分化拍音量スライダー
+        document.getElementById('subdivisionVolumeSlider').addEventListener('input', (e) => {
+            this.setSubdivisionVolume(parseInt(e.target.value));
         });
 
         // プリセットボタン
@@ -935,6 +962,7 @@ class LanguageManager {
                 shortcutTap: 'タップテンポ',
                 reset: '設定をリセット',
                 subdivisionSound: '細分化拍で別の音を使用',
+                subdivisionVolume: '細分化拍の音量',
                 timer: 'タイマー',
                 minutes: '分',
                 seconds: '秒',
@@ -980,6 +1008,7 @@ class LanguageManager {
                 shortcutTap: 'Tap Tempo',
                 reset: 'Reset Settings',
                 subdivisionSound: 'Different sound for subdivisions',
+                subdivisionVolume: 'Subdivision Volume',
                 timer: 'Timer',
                 minutes: 'min',
                 seconds: 'sec',
