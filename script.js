@@ -210,6 +210,10 @@ class Metronome {
                 const maxAngle = 30;
                 const direction = this.currentBeat % 2 === 0 ? 1 : -1;
                 const angle = maxAngle * direction;
+
+                // トランジション時間を拍の長さに合わせる
+                const beatDuration = 60.0 / this.tempo;
+                pendulum.style.transition = `transform ${beatDuration}s linear`;
                 pendulum.style.transform = `rotate(${angle}deg)`;
 
                 if (isAccent) {
