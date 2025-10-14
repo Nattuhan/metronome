@@ -243,13 +243,14 @@ class Metronome {
 
         // すぐに最初の拍を鳴らしてビジュアルを更新（即座に右側に動かす）
         this.playSound(this.audioContext.currentTime, true, false);
-        this.updateVisuals(true, 0, 1); // totalBeatCount=1 で右側(30deg)に動かす
-        this.totalBeats++;
+        // totalBeatCountは0だが、初期位置が左(-30deg)なので、1を渡して右(30deg)に動かす
+        this.updateVisuals(true, 0, 1);
 
-        // 次の拍のスケジュール時間を設定（currentBeatは0のままで、次のスケジューラーで1拍目が再度スケジュールされないように）
+        // 次の拍のスケジュール時間を設定
         const secondsPerBeat = 60.0 / this.tempo;
         this.nextNoteTime += secondsPerBeat;
         this.currentBeat = 1; // 次は2拍目から
+        // totalBeatsは0のままにして、次のscheduleNoteで1になる（2拍目は左に戻る）
 
         this.timerID = setInterval(() => this.scheduler(), 25);
 
