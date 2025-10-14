@@ -97,7 +97,7 @@ class Metronome {
         // ビジュアルフィードバック
         const delay = (time - this.audioContext.currentTime) * 1000;
         setTimeout(() => {
-            this.updateVisuals(isAccent);
+            this.updateVisuals(isAccent, beatNumber);
         }, delay);
     }
 
@@ -198,8 +198,8 @@ class Metronome {
     }
 
     // ビジュアル更新
-    updateVisuals(isAccent) {
-        this.updateBeatIndicator();
+    updateVisuals(isAccent, beatNumber) {
+        this.updateBeatIndicator(beatNumber);
 
         const visualDisplay = document.querySelector('.visual-display');
         const bpmDisplay = document.getElementById('bpm-display');
@@ -208,7 +208,7 @@ class Metronome {
         switch(this.animationType) {
             case 'pendulum':
                 const maxAngle = 30;
-                const direction = this.currentBeat % 2 === 0 ? 1 : -1;
+                const direction = beatNumber % 2 === 0 ? 1 : -1;
                 const angle = maxAngle * direction;
 
                 // トランジション時間を拍の長さに合わせる
@@ -252,10 +252,16 @@ class Metronome {
         this.updateBeatIndicator();
     }
 
-    updateBeatIndicator() {
+    updateBeatIndicator(beatNumber) {
         const indicator = document.getElementById('beat-indicator');
-        const currentBeatDisplay = this.isPlaying ? this.currentBeat + 1 : 1;
-        indicator.textContent = `${currentBeatDisplay}/${this.beatsPerBar}`;
+        if (beatNumber !== undefined) {
+            // 再生中で特定のビート番号が指定された場合
+            const currentBeatDisplay = beatNumber + 1;
+            indicator.textContent = `${currentBeatDisplay}/${this.beatsPerBar}`;
+        } else {
+            // 停止中や初期化時
+            indicator.textContent = `1/${this.beatsPerBar}`;
+        }
     }
 
     updatePlayButton() {
