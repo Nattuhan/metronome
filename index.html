@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Audio メトロノーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Web Audio メトロノーム</h1>
+        </header>
+
+        <main>
+            <!-- ビジュアル表示エリア -->
+            <div class="visual-display">
+                <div id="pendulum-container" class="animation-container active">
+                    <div id="pendulum" class="pendulum"></div>
+                </div>
+                <div id="bpm-display" class="bpm-display">120</div>
+                <div id="beat-indicator" class="beat-indicator">1/4</div>
+            </div>
+
+            <!-- コントロールパネル -->
+            <div class="controls">
+                <!-- 再生/停止ボタン -->
+                <div class="play-controls">
+                    <button id="playBtn" class="btn-primary">
+                        <span id="playIcon">▶</span>
+                        <span id="playText">スタート</span>
+                    </button>
+                    <button id="tapBtn" class="btn-secondary">タップテンポ</button>
+                </div>
+
+                <!-- テンポ設定 -->
+                <div class="control-group">
+                    <label for="tempoSlider">
+                        テンポ (BPM)
+                        <input type="number" id="tempoInput" min="1" max="300" value="120" class="tempo-input">
+                    </label>
+                    <input type="range" id="tempoSlider" min="1" max="300" value="120" step="1" class="slider">
+                </div>
+
+                <!-- 拍子設定 -->
+                <div class="control-group">
+                    <label>拍子</label>
+                    <div class="beat-controls">
+                        <select id="beatsPerBar" class="select-input">
+                            <option value="1">1拍</option>
+                            <option value="2">2拍</option>
+                            <option value="3">3拍</option>
+                            <option value="4" selected>4拍</option>
+                            <option value="5">5拍</option>
+                            <option value="6">6拍</option>
+                            <option value="7">7拍</option>
+                            <option value="8">8拍</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- リズムパターン -->
+                <div class="control-group">
+                    <label>リズムパターン</label>
+                    <select id="rhythmPattern" class="select-input">
+                        <option value="simple" selected>シンプル</option>
+                        <option value="eighth">8分音符</option>
+                        <option value="triplet">3連符</option>
+                        <option value="sixteenth">16分音符</option>
+                    </select>
+                </div>
+
+                <!-- 音色設定 -->
+                <div class="control-group">
+                    <label>音色</label>
+                    <select id="soundType" class="select-input">
+                        <option value="click" selected>クリック</option>
+                        <option value="beep">ビープ</option>
+                        <option value="wood">ウッド</option>
+                        <option value="cowbell">カウベル</option>
+                    </select>
+                </div>
+
+                <!-- 音量設定 -->
+                <div class="control-group">
+                    <label for="volumeSlider">音量</label>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="70" step="1" class="slider">
+                    <span id="volumeValue">70%</span>
+                </div>
+
+                <!-- アニメーション設定 -->
+                <div class="control-group">
+                    <label>アニメーション</label>
+                    <select id="animationType" class="select-input">
+                        <option value="pendulum" selected>振り子</option>
+                        <option value="pulse">拡大縮小</option>
+                        <option value="flash">点滅</option>
+                        <option value="none">なし</option>
+                    </select>
+                </div>
+
+                <!-- プリセット -->
+                <div class="control-group">
+                    <label>プリセット</label>
+                    <div class="preset-buttons">
+                        <button class="btn-preset" data-bpm="60">Largo (60)</button>
+                        <button class="btn-preset" data-bpm="80">Andante (80)</button>
+                        <button class="btn-preset" data-bpm="120">Moderato (120)</button>
+                        <button class="btn-preset" data-bpm="140">Allegro (140)</button>
+                        <button class="btn-preset" data-bpm="180">Presto (180)</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="shortcuts">
+                <h3>キーボードショートカット</h3>
+                <ul>
+                    <li><kbd>Space</kbd> - 再生/停止</li>
+                    <li><kbd>↑</kbd> / <kbd>↓</kbd> - テンポ調整 (±1)</li>
+                    <li><kbd>T</kbd> - タップテンポ</li>
+                </ul>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
