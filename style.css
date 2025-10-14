@@ -942,6 +942,11 @@ body.light-mode .pendulum::after {
     background: #888;
 }
 
+body.light-mode .pendulum.accent::after {
+    background: #ff6b6b;
+    animation: accentPulse 0.3s ease-out;
+}
+
 body.light-mode .theme-toggle-switch:hover .toggle-slider,
 body.light-mode .lang-toggle-switch:hover .toggle-slider {
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);

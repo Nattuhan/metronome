@@ -241,8 +241,10 @@ class Metronome {
         this.totalBeats = 0;
         this.nextNoteTime = this.audioContext.currentTime;
 
-        // すぐに最初の拍を鳴らしてビジュアルを更新
-        this.scheduleNote(0, this.audioContext.currentTime);
+        // すぐに最初の拍を鳴らしてビジュアルを更新（即座に右側に動かす）
+        this.playSound(this.audioContext.currentTime, true, false);
+        this.updateVisuals(true, 0, 1); // totalBeatCount=1 で右側(30deg)に動かす
+        this.totalBeats++;
         this.nextNote();
 
         this.timerID = setInterval(() => this.scheduler(), 25);
