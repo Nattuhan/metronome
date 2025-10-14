@@ -11,13 +11,6 @@
         <header>
             <h1 data-i18n="title">Metronome</h1>
             <div class="header-controls">
-                <!-- タイマー表示 -->
-                <div class="header-timer">
-                    <div class="timer-compact">
-                        <div id="timerDisplayHeader" class="timer-display-header">--:--</div>
-                    </div>
-                </div>
-
                 <label class="theme-toggle-switch" title="Theme">
                     <span class="toggle-icon left">🌙</span>
                     <input type="checkbox" id="themeToggle">
@@ -57,17 +50,17 @@
 
                 <!-- コントロールパネル -->
                 <div class="controls">
-                <!-- 再生/停止ボタン -->
-                <div class="play-controls">
+                    <!-- 再生/停止ボタン -->
+                    <div class="play-controls">
                     <button id="playBtn" class="btn-primary">
                         <span id="playIcon">▶</span>
                         <span id="playText" data-i18n="start">Start</span>
                     </button>
-                    <button id="tapBtn" class="btn-secondary" data-i18n="tapTempo">Tap Tempo</button>
-                </div>
+                        <button id="tapBtn" class="btn-secondary" data-i18n="tapTempo">Tap Tempo</button>
+                    </div>
 
-                <!-- テンポ設定 -->
-                <div class="control-group section-divider">
+                    <!-- テンポ設定 -->
+                    <div class="control-group section-divider">
                     <label for="tempoSlider">
                         <span data-i18n="tempo">Tempo</span> (BPM)
                         <input type="number" id="tempoInput" min="1" max="300" value="120" class="tempo-input">
@@ -137,45 +130,48 @@
                     </select>
                 </div>
 
-                <!-- タイマー設定 -->
-                <div class="control-group">
-                    <label data-i18n="timer">Timer</label>
-                    <div class="timer-controls">
-                        <div class="timer-inputs">
-                            <div class="timer-input-group">
-                                <input type="number" id="timerMinutes" min="0" max="999" value="0" class="timer-input">
-                                <span data-i18n="minutes">min</span>
-                            </div>
-                            <div class="timer-input-group">
-                                <input type="number" id="timerSeconds" min="0" max="59" value="0" class="timer-input">
-                                <span data-i18n="seconds">sec</span>
-                            </div>
+                    <!-- プリセット -->
+                    <div class="control-group">
+                        <label data-i18n="presets">Presets</label>
+                        <div class="preset-buttons">
+                            <button class="btn-preset" data-bpm="60">Largo (60)</button>
+                            <button class="btn-preset" data-bpm="80">Andante (80)</button>
+                            <button class="btn-preset" data-bpm="120">Moderato (120)</button>
+                            <button class="btn-preset" data-bpm="140">Allegro (140)</button>
+                            <button class="btn-preset" data-bpm="180">Presto (180)</button>
                         </div>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="timerEnabled" class="checkbox-input">
-                            <span data-i18n="timerEnabled">Enable timer</span>
-                        </label>
+                    </div>
+
+                    <!-- リセットボタン -->
+                    <div class="control-group">
+                        <button id="resetBtn" class="btn-reset" data-i18n="reset">Reset Settings</button>
                     </div>
                 </div>
+            </div>
 
-                <!-- プリセット -->
-                <div class="control-group">
-                    <label data-i18n="presets">Presets</label>
-                    <div class="preset-buttons">
-                        <button class="btn-preset" data-bpm="60">Largo (60)</button>
-                        <button class="btn-preset" data-bpm="80">Andante (80)</button>
-                        <button class="btn-preset" data-bpm="120">Moderato (120)</button>
-                        <button class="btn-preset" data-bpm="140">Allegro (140)</button>
-                        <button class="btn-preset" data-bpm="180">Presto (180)</button>
+            <!-- タイマー右カラム -->
+            <aside class="timer-panel">
+                <div class="timer-panel-header">
+                    <h3 data-i18n="timer">Timer</h3>
+                </div>
+                <div class="timer-display-large" id="timerDisplayHeader">--:--</div>
+                <div class="timer-settings">
+                    <div class="timer-inputs">
+                        <div class="timer-input-group">
+                            <input type="number" id="timerMinutes" min="0" max="999" value="0" class="timer-input">
+                            <span data-i18n="minutes">min</span>
+                        </div>
+                        <div class="timer-input-group">
+                            <input type="number" id="timerSeconds" min="0" max="59" value="0" class="timer-input">
+                            <span data-i18n="seconds">sec</span>
+                        </div>
                     </div>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="timerEnabled" class="checkbox-input">
+                        <span data-i18n="timerEnabled">Enable timer</span>
+                    </label>
                 </div>
-
-                <!-- リセットボタン -->
-                <div class="control-group">
-                    <button id="resetBtn" class="btn-reset" data-i18n="reset">Reset Settings</button>
-                </div>
-            </div>
-            </div>
+            </aside>
         </main>
 
         <footer>

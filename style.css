@@ -46,29 +46,52 @@ header h1 {
     align-items: center;
 }
 
-/* ヘッダータイマー */
-.header-timer {
+/* タイマーパネル（右カラム） */
+.timer-panel {
+    width: 220px;
+    background: #222;
+    border-radius: 15px;
+    padding: 20px;
+    flex-shrink: 0;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.timer-display-header {
-    font-size: 1.5rem;
+.timer-panel-header {
+    text-align: center;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #333;
+}
+
+.timer-panel-header h3 {
+    font-size: 1.1rem;
+    color: #f5f5f5;
+    margin: 0;
+}
+
+.timer-display-large {
+    font-size: 3rem;
     font-weight: 700;
     color: #f5f5f5;
-    background: #2c2c2c;
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 2px solid #444;
-    letter-spacing: 2px;
-    min-width: 100px;
     text-align: center;
+    background: #2c2c2c;
+    padding: 20px;
+    border-radius: 12px;
+    border: 2px solid #444;
+    letter-spacing: 3px;
 }
 
-.timer-display-header.warning {
+.timer-display-large.warning {
     color: #ff6b6b;
     border-color: #ff6b6b;
     animation: timerBlink 0.5s ease-in-out infinite;
+}
+
+.timer-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 /* トグルスイッチ共通スタイル */
@@ -664,6 +687,15 @@ kbd {
         max-height: 300px;
         margin-bottom: 20px;
     }
+
+    .timer-panel {
+        width: 100%;
+        order: 2;
+    }
+
+    .main-content {
+        order: 3;
+    }
 }
 
 @media (max-width: 600px) {
@@ -724,6 +756,11 @@ kbd {
 
     .saved-presets-panel {
         max-height: 250px;
+    }
+
+    .timer-display-large {
+        font-size: 2rem;
+        padding: 15px;
     }
 }
 
@@ -938,17 +975,12 @@ body.light-mode .visual-display.flash-mode.flash-active .bpm-display {
     color: #333;
 }
 
-/* タイマーコントロール */
-.timer-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
+/* タイマー共通 */
 .timer-inputs {
     display: flex;
     gap: 15px;
     align-items: center;
+    justify-content: center;
 }
 
 .timer-input-group {
@@ -975,7 +1007,6 @@ body.light-mode .visual-display.flash-mode.flash-active .bpm-display {
     font-weight: 500;
 }
 
-
 @keyframes timerBlink {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
@@ -992,13 +1023,25 @@ body.light-mode .timer-input-group span {
     color: #555;
 }
 
-body.light-mode .timer-display-header {
-    background: #f8f9fa;
+body.light-mode .timer-panel {
+    background: #f8f8f8;
+}
+
+body.light-mode .timer-panel-header {
+    border-bottom-color: #ddd;
+}
+
+body.light-mode .timer-panel-header h3 {
+    color: #333;
+}
+
+body.light-mode .timer-display-large {
+    background: #ffffff;
     color: #333;
     border-color: #ccc;
 }
 
-body.light-mode .timer-display-header.warning {
+body.light-mode .timer-display-large.warning {
     color: #d63031;
     border-color: #ff6b6b;
 }
