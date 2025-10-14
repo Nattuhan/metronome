@@ -586,7 +586,8 @@ class Metronome {
 
         // リセットボタン
         document.getElementById('resetBtn').addEventListener('click', () => {
-            if (confirm(languageManager.currentLang === 'ja'
+            const lang = localStorage.getItem('language') || 'ja';
+            if (confirm(lang === 'ja'
                 ? '設定を初期状態にリセットしますか？'
                 : 'Reset all settings to default?')) {
                 this.resetSettings();
@@ -671,7 +672,8 @@ class Metronome {
     }
 
     saveCurrentAsPreset() {
-        const name = prompt(languageManager.currentLang === 'ja'
+        const lang = localStorage.getItem('language') || 'ja';
+        const name = prompt(lang === 'ja'
             ? 'プリセット名を入力してください:'
             : 'Enter preset name:');
 
@@ -710,7 +712,8 @@ class Metronome {
         const preset = this.customPresets.find(p => p.id === presetId);
         if (!preset) return;
 
-        const confirmMsg = languageManager.currentLang === 'ja'
+        const lang = localStorage.getItem('language') || 'ja';
+        const confirmMsg = lang === 'ja'
             ? `「${preset.name}」を削除しますか？`
             : `Delete "${preset.name}"?`;
 
@@ -734,15 +737,24 @@ class Metronome {
     }
 
     getRhythmPatternName(pattern) {
-        const translations = languageManager.translations[languageManager.currentLang];
-        const patterns = {
-            'simple': translations.simple,
-            'eighth': translations.eighth,
-            'triplet': translations.triplet,
-            'sixteenth': translations.sixteenth,
-            'sextuplet': translations.sextuplet
+        const lang = localStorage.getItem('language') || 'ja';
+        const translationsMap = {
+            ja: {
+                simple: 'シンプル',
+                eighth: '8分音符',
+                triplet: '3連符',
+                sixteenth: '16分音符',
+                sextuplet: '6連符'
+            },
+            en: {
+                simple: 'Simple',
+                eighth: 'Eighth Notes',
+                triplet: 'Triplets',
+                sixteenth: 'Sixteenth Notes',
+                sextuplet: 'Sextuplets'
+            }
         };
-        return patterns[pattern] || pattern;
+        return translationsMap[lang][pattern] || pattern;
     }
 
     renderPresetsList() {
@@ -750,12 +762,13 @@ class Metronome {
         container.innerHTML = '';
 
         if (this.customPresets.length === 0) {
+            const lang = localStorage.getItem('language') || 'ja';
             const empty = document.createElement('div');
             empty.style.color = '#888';
             empty.style.textAlign = 'center';
             empty.style.padding = '20px 0';
             empty.style.fontSize = '0.9rem';
-            empty.textContent = languageManager.currentLang === 'ja'
+            empty.textContent = lang === 'ja'
                 ? '保存されたプリセットはありません'
                 : 'No saved presets';
             container.appendChild(empty);
@@ -833,17 +846,18 @@ class Metronome {
                 <span class="preset-info-value">${preset.tempo} BPM</span>
             `;
 
+            const lang = localStorage.getItem('language') || 'ja';
             const beatRow = document.createElement('div');
             beatRow.className = 'preset-info-row';
             beatRow.innerHTML = `
-                <span class="preset-info-label">${languageManager.currentLang === 'ja' ? '拍子:' : 'Beats:'}</span>
+                <span class="preset-info-label">${lang === 'ja' ? '拍子:' : 'Beats:'}</span>
                 <span class="preset-info-value">${preset.beatsPerBar}/4</span>
             `;
 
             const rhythmRow = document.createElement('div');
             rhythmRow.className = 'preset-info-row';
             rhythmRow.innerHTML = `
-                <span class="preset-info-label">${languageManager.currentLang === 'ja' ? 'リズム:' : 'Rhythm:'}</span>
+                <span class="preset-info-label">${lang === 'ja' ? 'リズム:' : 'Rhythm:'}</span>
                 <span class="preset-info-value">${this.getRhythmPatternName(preset.rhythmPattern)}</span>
             `;
 
