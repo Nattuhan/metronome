@@ -95,25 +95,25 @@ class Metronome {
 
         // 細分化された音の場合、別の音を使用
         if (isSubdivision && this.subdivisionSound) {
-            // 弱拍専用の音（より高く、短く、静かに）
+            // 弱拍専用の音（より低く、短く、静かに）
             switch(this.soundType) {
                 case 'click':
-                    osc.frequency.value = 1200;
+                    osc.frequency.value = 400;
                     gainNode.gain.value = this.volume * 0.5;
                     osc.type = 'sine';
                     break;
                 case 'beep':
-                    osc.frequency.value = 1320;
+                    osc.frequency.value = 220;
                     gainNode.gain.value = this.volume * 0.5;
                     osc.type = 'square';
                     break;
                 case 'wood':
-                    osc.frequency.value = 300;
+                    osc.frequency.value = 100;
                     gainNode.gain.value = this.volume * 0.4;
                     osc.type = 'triangle';
                     break;
                 case 'cowbell':
-                    osc.frequency.value = 660;
+                    osc.frequency.value = 200;
                     gainNode.gain.value = this.volume * 0.5;
                     osc.type = 'square';
                     break;
