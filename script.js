@@ -177,6 +177,11 @@ class Metronome {
                     this.playSound(time + (60.0 / this.tempo) * i / 4, isAccent && i === 0, i > 0); // i > 0は弱拍
                 }
                 break;
+            case 'sextuplet':
+                for(let i = 0; i < 6; i++) {
+                    this.playSound(time + (60.0 / this.tempo) * i / 6, isAccent && i === 0, i > 0); // i > 0は弱拍
+                }
+                break;
         }
 
         // ビジュアルフィードバック
@@ -572,6 +577,7 @@ class LanguageManager {
                 eighth: '8分音符',
                 triplet: '3連符',
                 sixteenth: '16分音符',
+                sextuplet: '6連符',
                 sound: '音色',
                 soundClick: 'クリック',
                 soundBeep: 'ビープ',
@@ -610,6 +616,7 @@ class LanguageManager {
                 eighth: 'Eighth Notes',
                 triplet: 'Triplets',
                 sixteenth: 'Sixteenth Notes',
+                sextuplet: 'Sextuplets',
                 sound: 'Sound',
                 soundClick: 'Click',
                 soundBeep: 'Beep',
