@@ -128,10 +128,26 @@ export class MusicAnalyzer {
                 const startRatio = Math.min(this.dragStartX, endX) / rect.width;
                 const endRatio = Math.max(this.dragStartX, endX) / rect.width;
 
-                this.loopStart = startRatio * duration;
-                this.loopEnd = endRatio * duration;
+                const loopStart = startRatio * duration;
+                const loopEnd = endRatio * duration;
+                const loopDuration = loopEnd - loopStart;
 
-                console.log(`Loop range set: ${this.loopStart.toFixed(2)}s - ${this.loopEnd.toFixed(2)}s`);
+                // 1秒未満の場合はクリックと同じ扱い
+                if (loopDuration < 1.0) {
+                    console.log(`Loop range too short (${loopDuration.toFixed(2)}s < 1.0s), treating as click`);
+                    const ratio = this.dragStartX / rect.width;
+                    this.seekTo(ratio);
+                    this.clearSelection();
+                } else {
+                    // 1秒以上の場合はループ範囲を設定
+                    this.loopStart = loopStart;
+                    this.loopEnd = loopEnd;
+
+                    console.log(`Loop range set: ${this.loopStart.toFixed(2)}s - ${this.loopEnd.toFixed(2)}s (duration: ${loopDuration.toFixed(2)}s)`);
+
+                    // ループ範囲の始点にジャンプ
+                    this.seekTo(startRatio);
+                }
             }
 
             this.isDragging = false;
@@ -429,6 +445,7 @@ export class MusicAnalyzer {
         console.log(`isPlaying=${this.isPlaying}`);
         console.log(`pausedAt=${this.pausedAt}`);
         console.log(`firstBeatOffset=${this.firstBeatOffset}`);
+        console.log(`loopStart=${this.loopStart}, loopEnd=${this.loopEnd}`);
 
         if (!this.audioBuffer) {
             console.log('No audioBuffer, returning');
@@ -447,7 +464,7 @@ export class MusicAnalyzer {
             this.sourceNode = null;
         }
 
-        const offset = this.pausedAt || this.firstBeatOffset;
+        let offset = this.pausedAt || this.firstBeatOffset;
         console.log(`offset=${offset}秒, audioBuffer.duration=${this.audioBuffer.duration}秒`);
 
         // offsetが曲の長さを超えていないかチェック
@@ -455,6 +472,16 @@ export class MusicAnalyzer {
             console.log('ERROR: offset exceeds duration, resetting to 0');
             this.pausedAt = 0;
             offset = this.firstBeatOffset;
+        }
+
+        // ループ範囲が設定されている場合、ループ範囲の長さを計算して再生時間を制限
+        let duration = undefined; // undefinedの場合は最後まで再生
+        if (this.loopStart !== null && this.loopEnd !== null) {
+            // ループ範囲内から開始する場合、loopEndまでの長さを指定
+            if (offset >= this.loopStart && offset < this.loopEnd) {
+                duration = this.loopEnd - offset;
+                console.log(`Loop mode: offset=${offset}, duration=${duration}, will stop at ${this.loopEnd}`);
+            }
         }
 
         // 新しいソースノードとGainNodeを作成
@@ -468,17 +495,26 @@ export class MusicAnalyzer {
 
         // 再生終了時の処理（このsourceNodeへの参照を保持）
         const currentSourceNode = this.sourceNode;
+        const isLooping = (this.loopStart !== null && this.loopEnd !== null && duration !== undefined);
+
         this.sourceNode.onended = () => {
             console.log('sourceNode ended event fired');
             // このイベントが現在のsourceNodeのものか確認
             if (this.sourceNode === currentSourceNode) {
-                console.log('Ending playback (valid onended event)');
-                this.isPlaying = false;
-                this.pausedAt = 0;
-                this.updatePlayButton();
-                this.stopPlayheadUpdate();
-                if (this.syncWithMetronome) {
-                    this.metronome.stop();
+                // ループ範囲が設定されている場合はループ開始位置に戻る
+                if (isLooping) {
+                    console.log(`Loop ended, jumping back to ${this.loopStart}s`);
+                    this.pausedAt = this.loopStart;
+                    this.playMusic(); // 再度再生開始
+                } else {
+                    console.log('Ending playback (valid onended event)');
+                    this.isPlaying = false;
+                    this.pausedAt = 0;
+                    this.updatePlayButton();
+                    this.stopPlayheadUpdate();
+                    if (this.syncWithMetronome) {
+                        this.metronome.stop();
+                    }
                 }
             } else {
                 console.log('Ignoring onended event from old sourceNode');
@@ -486,7 +522,12 @@ export class MusicAnalyzer {
         };
 
         // 曲を再生開始
-        this.sourceNode.start(this.audioContext.currentTime, offset);
+        if (duration !== undefined) {
+            console.log(`Starting with duration limit: ${duration}s`);
+            this.sourceNode.start(this.audioContext.currentTime, offset, duration);
+        } else {
+            this.sourceNode.start(this.audioContext.currentTime, offset);
+        }
         this.isPlaying = true;
         this.startTime = this.audioContext.currentTime - offset;
         console.log(`sourceNode started at offset=${offset}, isPlaying=${this.isPlaying}, startTime=${this.startTime}`);
