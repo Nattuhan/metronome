@@ -999,12 +999,12 @@ export class MusicAnalyzer {
                 // メトロノームのテンポを調整BPMに設定
                 this.metronome.setTempo(adjustedBPM);
 
-                // 曲の再生位置から拍の位置を計算
-                const elapsedBeats = (startOffset / 60.0) * adjustedBPM;
+                // 曲の再生位置から拍の位置を計算（無音部分を除いた実際の経過時間を使用）
+                const elapsedBeats = ((startOffset - this.firstBeatOffset) / 60.0) * adjustedBPM;
                 const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
                 const totalBeats = Math.floor(elapsedBeats);
 
-                console.log(`Metronome sync: offset=${startOffset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${totalBeats}`);
+                console.log(`Metronome sync: offset=${startOffset}秒, firstBeatOffset=${this.firstBeatOffset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${totalBeats}`);
 
                 // メトロノームの拍位置を事前に設定
                 this.metronome.currentBeat = beatInBar;
@@ -1092,11 +1092,11 @@ export class MusicAnalyzer {
             // メトロノームと同期している場合、拍位置を再計算
             if (this.syncWithMetronome && this.metronome.isPlaying) {
                 const adjustedBPM = this.detectedBPM * this.playbackRate;
-                const elapsedBeats = (targetTime / 60.0) * adjustedBPM;
+                const elapsedBeats = ((targetTime - this.firstBeatOffset) / 60.0) * adjustedBPM;
                 const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
                 const totalBeats = Math.floor(elapsedBeats);
 
-                console.log(`Resyncing metronome after seek: offset=${targetTime}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${totalBeats}`);
+                console.log(`Resyncing metronome after seek: offset=${targetTime}秒, firstBeatOffset=${this.firstBeatOffset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${totalBeats}`);
 
                 // メトロノームの拍位置を更新
                 this.metronome.currentBeat = beatInBar;
