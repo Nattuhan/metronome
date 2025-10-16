@@ -38,6 +38,49 @@
                 </div>
             </aside>
 
+            <!-- 音楽解析パネル -->
+            <aside class="music-analysis-panel">
+                <div class="music-analysis-header">
+                    <h3 data-i18n="musicAnalysis">Music Analysis</h3>
+                </div>
+                <div class="music-analysis-content">
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <input type="file" id="audioFileInput" accept="audio/*" style="display: none;">
+                        <div class="upload-placeholder" id="uploadPlaceholder">
+                            <span class="upload-icon">🎵</span>
+                            <span data-i18n="uploadMusic">Upload Music</span>
+                            <span class="upload-hint" data-i18n="uploadHint">Click or drag & drop</span>
+                        </div>
+                    </div>
+                    <div id="musicInfo" class="music-info" style="display: none;">
+                        <div class="music-info-item">
+                            <span class="info-label" data-i18n="fileName">File:</span>
+                            <span class="info-value" id="musicFileName">-</span>
+                        </div>
+                        <div class="music-info-item">
+                            <span class="info-label" data-i18n="detectedBPM">Detected BPM:</span>
+                            <span class="info-value" id="detectedBPM">-</span>
+                        </div>
+                        <div class="music-controls">
+                            <button id="playMusicBtn" class="btn-music-control" data-i18n="playMusic">▶ Play</button>
+                            <button id="removeMusicBtn" class="btn-music-remove" data-i18n="removeMusic">× Remove</button>
+                        </div>
+                        <div class="sync-controls">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="syncWithMetronome" class="checkbox-input">
+                                <span data-i18n="syncWithMetronome">Sync with metronome</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="analysisProgress" class="analysis-progress" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <span class="progress-text" id="progressText" data-i18n="analyzing">Analyzing...</span>
+                    </div>
+                </div>
+            </aside>
+
             <div class="main-content">
                 <!-- ビジュアル表示エリア -->
                 <div class="visual-display">

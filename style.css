@@ -300,6 +300,184 @@ main {
     font-weight: 500;
 }
 
+/* 音楽解析パネル（左カラム） */
+.music-analysis-panel {
+    width: 250px;
+    background: #222;
+    border-radius: 15px;
+    padding: 20px;
+    flex-shrink: 0;
+    margin-top: 20px;
+}
+
+.music-analysis-header {
+    text-align: center;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #333;
+    margin-bottom: 15px;
+}
+
+.music-analysis-header h3 {
+    font-size: 1.1rem;
+    color: #f5f5f5;
+    margin: 0;
+}
+
+.music-analysis-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.file-upload-area {
+    background: #2c2c2c;
+    border: 2px dashed #555;
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+    border-color: #888;
+    background: #333;
+}
+
+.file-upload-area.dragover {
+    border-color: #4CAF50;
+    background: #1a3a1a;
+}
+
+.upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #aaa;
+}
+
+.upload-icon {
+    font-size: 2.5rem;
+}
+
+.upload-hint {
+    font-size: 0.75rem;
+    color: #777;
+}
+
+.music-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.music-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-label {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.info-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #f5f5f5;
+    word-break: break-all;
+}
+
+.music-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.btn-music-control {
+    flex: 1;
+    background: #2c2c2c;
+    color: #4a90e2;
+    border: 2px solid #4a90e2;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-music-control:hover {
+    background: #4a90e2;
+    color: white;
+}
+
+.btn-music-control.playing {
+    background: #e74c3c;
+    color: white;
+    border-color: #e74c3c;
+}
+
+.btn-music-remove {
+    flex: 1;
+    background: #2c2c2c;
+    color: #ff6b6b;
+    border: 2px solid #ff6b6b;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-music-remove:hover {
+    background: #3a1a1a;
+    color: #ff8888;
+}
+
+.sync-controls {
+    margin-top: 5px;
+}
+
+.analysis-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;
+    background: #2c2c2c;
+    border-radius: 8px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #444;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4a90e2 0%, #5ba3f5 100%);
+    width: 0%;
+    transition: width 0.3s ease;
+    animation: progressAnimation 1.5s ease-in-out infinite;
+}
+
+@keyframes progressAnimation {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+.progress-text {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #aaa;
+}
+
 .main-content {
     flex: 1;
     min-width: 0;
@@ -1151,4 +1329,101 @@ body.light-mode .control-group.section-divider {
 body.light-mode .beat-section label,
 body.light-mode .rhythm-section label {
     color: #555;
+}
+
+/* ライトモード - 音楽解析パネル */
+body.light-mode .music-analysis-panel {
+    background: #f8f8f8;
+}
+
+body.light-mode .music-analysis-header {
+    border-bottom-color: #ddd;
+}
+
+body.light-mode .music-analysis-header h3 {
+    color: #333;
+}
+
+body.light-mode .file-upload-area {
+    background: #ffffff;
+    border-color: #ccc;
+}
+
+body.light-mode .file-upload-area:hover {
+    border-color: #999;
+    background: #f8f9fa;
+}
+
+body.light-mode .file-upload-area.dragover {
+    border-color: #4CAF50;
+    background: #e8f5e9;
+}
+
+body.light-mode .upload-placeholder {
+    color: #777;
+}
+
+body.light-mode .upload-hint {
+    color: #999;
+}
+
+body.light-mode .info-label {
+    color: #666;
+}
+
+body.light-mode .info-value {
+    color: #333;
+}
+
+body.light-mode .btn-music-control {
+    background: #ffffff;
+    color: #4a90e2;
+    border-color: #4a90e2;
+}
+
+body.light-mode .btn-music-control:hover {
+    background: #4a90e2;
+    color: white;
+}
+
+body.light-mode .btn-music-control.playing {
+    background: #e74c3c;
+    border-color: #e74c3c;
+}
+
+body.light-mode .btn-music-remove {
+    background: #ffffff;
+    color: #d63031;
+    border-color: #ff6b6b;
+}
+
+body.light-mode .btn-music-remove:hover {
+    background: #ffe5e5;
+    color: #c0392b;
+}
+
+body.light-mode .analysis-progress {
+    background: #ffffff;
+}
+
+body.light-mode .progress-bar {
+    background: #e0e0e0;
+}
+
+body.light-mode .progress-text {
+    color: #666;
+}
+
+/* レスポンシブ - 音楽解析パネル */
+@media (max-width: 1024px) {
+    .music-analysis-panel {
+        width: 100%;
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .music-analysis-panel {
+        margin-top: 15px;
+    }
 }
