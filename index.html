@@ -27,16 +27,43 @@
         </header>
 
         <main>
-            <!-- 保存したプリセットリスト -->
-            <aside class="saved-presets-panel">
-                <div class="saved-presets-header">
-                    <h3 data-i18n="savedPresets">Saved Presets</h3>
-                    <button id="savePresetBtn" class="btn-save-preset" data-i18n="savePreset">+ Save</button>
-                </div>
-                <div id="savedPresetsList" class="saved-presets-list">
-                    <!-- プリセットがここに表示される -->
-                </div>
-            </aside>
+            <!-- 左カラム: タイマーとプリセット -->
+            <div class="left-column">
+                <!-- タイマーパネル -->
+                <aside class="timer-panel">
+                    <div class="timer-panel-header">
+                        <h3 data-i18n="timer">Timer</h3>
+                    </div>
+                    <div class="timer-display-large" id="timerDisplayHeader">--:--</div>
+                    <div class="timer-settings">
+                        <div class="timer-inputs">
+                            <div class="timer-input-group">
+                                <input type="number" id="timerMinutes" min="0" max="999" value="0" class="timer-input">
+                                <span data-i18n="minutes">min</span>
+                            </div>
+                            <div class="timer-input-group">
+                                <input type="number" id="timerSeconds" min="0" max="59" value="0" class="timer-input">
+                                <span data-i18n="seconds">sec</span>
+                            </div>
+                        </div>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="timerEnabled" class="checkbox-input">
+                            <span data-i18n="timerEnabled">Enable timer</span>
+                        </label>
+                    </div>
+                </aside>
+
+                <!-- 保存したプリセットリスト -->
+                <aside class="saved-presets-panel">
+                    <div class="saved-presets-header">
+                        <h3 data-i18n="savedPresets">Saved Presets</h3>
+                        <button id="savePresetBtn" class="btn-save-preset" data-i18n="savePreset">+ Save</button>
+                    </div>
+                    <div id="savedPresetsList" class="saved-presets-list">
+                        <!-- プリセットがここに表示される -->
+                    </div>
+                </aside>
+            </div>
 
             <div class="main-content">
                 <!-- ビジュアル表示エリア -->
@@ -158,32 +185,8 @@
                 </div>
             </div>
 
-            <!-- タイマー・音楽解析カラム -->
+            <!-- 音楽解析カラム -->
             <div class="right-column">
-                <!-- タイマーパネル -->
-                <aside class="timer-panel">
-                    <div class="timer-panel-header">
-                        <h3 data-i18n="timer">Timer</h3>
-                    </div>
-                    <div class="timer-display-large" id="timerDisplayHeader">--:--</div>
-                    <div class="timer-settings">
-                        <div class="timer-inputs">
-                            <div class="timer-input-group">
-                                <input type="number" id="timerMinutes" min="0" max="999" value="0" class="timer-input">
-                                <span data-i18n="minutes">min</span>
-                            </div>
-                            <div class="timer-input-group">
-                                <input type="number" id="timerSeconds" min="0" max="59" value="0" class="timer-input">
-                                <span data-i18n="seconds">sec</span>
-                            </div>
-                        </div>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="timerEnabled" class="checkbox-input">
-                            <span data-i18n="timerEnabled">Enable timer</span>
-                        </label>
-                    </div>
-                </aside>
-
                 <!-- 音楽解析パネル -->
                 <aside class="music-analysis-panel">
                     <div class="music-analysis-header">

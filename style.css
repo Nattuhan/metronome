@@ -190,15 +190,23 @@ main {
     align-items: flex-start;
 }
 
-.saved-presets-panel {
+/* 左カラム: タイマーとプリセット */
+.left-column {
     flex: 1;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.saved-presets-panel {
     background: #222;
     border-radius: 15px;
     padding: 20px;
-    max-height: 80vh;
+    max-height: 50vh;
     overflow-y: auto;
     flex-shrink: 0;
-    min-width: 0;
 }
 
 .saved-presets-header {
@@ -902,10 +910,13 @@ kbd {
         flex-direction: column;
     }
 
-    .saved-presets-panel {
+    .left-column {
         width: 100%;
+        order: 1;
+    }
+
+    .saved-presets-panel {
         max-height: 300px;
-        margin-bottom: 20px;
     }
 
     .right-column {
@@ -1507,5 +1518,43 @@ body.light-mode .music-volume-control label {
 
 body.light-mode #musicVolumeValue {
     color: #555;
+}
+
+/* 再生速度コントロール */
+.music-playback-rate-control {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.music-playback-rate-control label {
+    font-size: 0.9rem;
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.playback-rate-input {
+    width: 70px;
+    padding: 5px 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: 2px solid #444;
+    border-radius: 8px;
+    text-align: center;
+    background: #2c2c2c;
+    color: #f5f5f5;
+}
+
+body.light-mode .music-playback-rate-control label {
+    color: #666;
+}
+
+body.light-mode .playback-rate-input {
+    background: #f8f9fa;
+    color: #333;
+    border-color: #ccc;
 }
 
