@@ -755,7 +755,7 @@ export class MusicAnalyzer {
 
         // 時間的スムージング用: 過去のクロマグラムを保存
         const chromaHistory = [];
-        const smoothingWindow = 3; // 3小節の移動平均
+        const smoothingWindow = 5; // 5小節の移動平均（安定性向上）
 
         // 小節ごとにクロマグラムを抽出してコード判定
         for (let samplePos = startSample; samplePos < maxSamples - barSamples; samplePos += barSamples) {
@@ -840,12 +840,8 @@ export class MusicAnalyzer {
         // 平均クロマグラムを計算
         const chromaAverage = chromaSum.map(sum => sum / frameCount);
 
-        // L2正規化: ベクトルの長さを1に正規化
-        const l2norm = Math.sqrt(chromaAverage.reduce((sum, val) => sum + val * val, 0));
-        if (l2norm > 0) {
-            return chromaAverage.map(val => val / l2norm);
-        }
-
+        // 対数圧縮のみを適用（正規化は削除）
+        // 正規化すると特徴が平坦化されすぎてコード判別が困難になる
         return chromaAverage;
     }
 
@@ -874,9 +870,8 @@ export class MusicAnalyzer {
         }
 
         // スコアが低すぎる場合はN.C.（ノーコード）
-        // 対数圧縮と正規化後の閾値を0.6に設定
-        // 研究論文では閾値を高めに設定することで誤検出を抑制
-        if (bestScore < 0.6) {
+        // 対数圧縮後の適切な閾値: 0.35
+        if (bestScore < 0.35) {
             return 'N.C.';
         }
 
