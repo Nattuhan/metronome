@@ -46,13 +46,20 @@ header h1 {
     align-items: center;
 }
 
-/* タイマーパネル（右カラム） */
-.timer-panel {
+/* 右カラム */
+.right-column {
     width: 220px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* タイマーパネル */
+.timer-panel {
     background: #222;
     border-radius: 15px;
     padding: 20px;
-    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -300,14 +307,11 @@ main {
     font-weight: 500;
 }
 
-/* 音楽解析パネル（左カラム） */
+/* 音楽解析パネル */
 .music-analysis-panel {
-    width: 250px;
     background: #222;
     border-radius: 15px;
     padding: 20px;
-    flex-shrink: 0;
-    margin-top: 20px;
 }
 
 .music-analysis-header {
@@ -902,7 +906,7 @@ kbd {
         margin-bottom: 20px;
     }
 
-    .timer-panel {
+    .right-column {
         width: 100%;
         order: 2;
     }
@@ -1414,16 +1418,3 @@ body.light-mode .progress-text {
     color: #666;
 }
 
-/* レスポンシブ - 音楽解析パネル */
-@media (max-width: 1024px) {
-    .music-analysis-panel {
-        width: 100%;
-        margin-top: 20px;
-    }
-}
-
-@media (max-width: 600px) {
-    .music-analysis-panel {
-        margin-top: 15px;
-    }
-}

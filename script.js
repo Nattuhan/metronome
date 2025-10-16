@@ -298,10 +298,17 @@ class Metronome {
     }
 
     setTempo(bpm) {
-        this.tempo = Math.max(1, Math.min(300, bpm));
-        document.getElementById('tempoSlider').value = this.tempo;
-        document.getElementById('tempoInput').value = this.tempo;
-        document.getElementById('bpm-display').textContent = this.tempo;
+        // 小数点第一位まで対応（1.0〜300.0）
+        this.tempo = Math.max(1, Math.min(300, parseFloat(bpm)));
+
+        // スライダーは整数のみ（小数点は反映しない）
+        document.getElementById('tempoSlider').value = Math.round(this.tempo);
+
+        // 入力とBPM表示は小数点第一位まで表示
+        const tempoDisplay = Number.isInteger(this.tempo) ? this.tempo : this.tempo.toFixed(1);
+        document.getElementById('tempoInput').value = tempoDisplay;
+        document.getElementById('bpm-display').textContent = tempoDisplay;
+
         this.saveSettings();
     }
 
@@ -580,9 +587,9 @@ class Metronome {
             this.setTempo(parseInt(e.target.value));
         });
 
-        // テンポ入力
+        // テンポ入力（小数点対応）
         document.getElementById('tempoInput').addEventListener('input', (e) => {
-            this.setTempo(parseInt(e.target.value));
+            this.setTempo(parseFloat(e.target.value));
         });
 
         // 拍子選択
@@ -968,7 +975,17 @@ class LanguageManager {
                 seconds: '秒',
                 timerEnabled: 'タイマーを有効にする',
                 savedPresets: 'プリセット',
-                savePreset: '+ 保存'
+                savePreset: '+ 保存',
+                musicAnalysis: '音楽解析',
+                uploadMusic: '音楽をアップロード',
+                uploadHint: 'クリックまたはドラッグ&ドロップ',
+                fileName: 'ファイル',
+                detectedBPM: '検出BPM',
+                playMusic: '▶ 再生',
+                stopMusic: '■ 停止',
+                removeMusic: '× 削除',
+                syncWithMetronome: 'メトロノームと同期',
+                analyzing: '解析中...'
             },
             en: {
                 title: 'Metronome',
@@ -1014,7 +1031,17 @@ class LanguageManager {
                 seconds: 'sec',
                 timerEnabled: 'Enable timer',
                 savedPresets: 'Presets',
-                savePreset: '+ Save'
+                savePreset: '+ Save',
+                musicAnalysis: 'Music Analysis',
+                uploadMusic: 'Upload Music',
+                uploadHint: 'Click or drag & drop',
+                fileName: 'File',
+                detectedBPM: 'Detected BPM',
+                playMusic: '▶ Play',
+                stopMusic: '■ Stop',
+                removeMusic: '× Remove',
+                syncWithMetronome: 'Sync with metronome',
+                analyzing: 'Analyzing...'
             }
         };
 
@@ -1077,14 +1104,485 @@ class LanguageManager {
     }
 }
 
+// 音楽解析クラス
+class MusicAnalyzer {
+    constructor(metronome) {
+        this.metronome = metronome;
+        this.audioContext = metronome.audioContext;
+        this.audioBuffer = null;
+        this.sourceNode = null;
+        this.isPlaying = false;
+        this.fileName = null;
+        this.detectedBPM = null;
+        this.syncWithMetronome = false;
+        this.startTime = 0;
+        this.firstBeatOffset = 0; // 最初の音の開始位置（秒）
+
+        this.initEventListeners();
+    }
+
+    initEventListeners() {
+        // ファイル入力
+        const fileInput = document.getElementById('audioFileInput');
+        const uploadArea = document.getElementById('fileUploadArea');
+        const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+
+        // クリックでファイル選択
+        uploadPlaceholder.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // ファイル選択
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                this.loadAudioFile(file);
+            }
+        });
+
+        // ドラッグ&ドロップ
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('audio/')) {
+                this.loadAudioFile(file);
+            }
+        });
+
+        // 再生/停止ボタン
+        document.getElementById('playMusicBtn').addEventListener('click', () => {
+            this.togglePlayback();
+        });
+
+        // 削除ボタン
+        document.getElementById('removeMusicBtn').addEventListener('click', () => {
+            this.removeMusic();
+        });
+
+        // 同期チェックボックス
+        document.getElementById('syncWithMetronome').addEventListener('change', (e) => {
+            this.syncWithMetronome = e.target.checked;
+        });
+    }
+
+    async loadAudioFile(file) {
+        this.fileName = file.name;
+
+        // UI更新: 解析中表示
+        this.showProgress(true);
+
+        try {
+            // ファイルを読み込む
+            const arrayBuffer = await file.arrayBuffer();
+
+            // Web Audio APIでデコード
+            this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+
+            // BPM検出と最初の音の位置検出
+            this.detectedBPM = await this.detectBPM();
+            this.firstBeatOffset = await this.detectFirstBeat();
+
+            // UI更新
+            this.showMusicInfo();
+            this.showProgress(false);
+
+            // 検出されたBPMをメトロノームに反映
+            if (this.detectedBPM) {
+                this.metronome.setTempo(this.detectedBPM);
+            }
+
+        } catch (error) {
+            console.error('Audio loading error:', error);
+            alert('音楽ファイルの読み込みに失敗しました。');
+            this.showProgress(false);
+        }
+    }
+
+    async detectBPM() {
+        // BPM検出アルゴリズム（複素正弦波との相関）
+        // 参考: https://www.wizard-notes.com/entry/music-analysis/compute-bpm
+        const channelData = this.audioBuffer.getChannelData(0);
+        const sampleRate = this.audioBuffer.sampleRate;
+
+        // 最初の100秒を解析（長時間解析でより高精度に）
+        const duration = 100;
+        const maxSamples = Math.min(channelData.length, sampleRate * duration);
+
+        // エネルギーエンベロープを計算（振幅の絶対値）
+        const windowSize = Math.floor(sampleRate * 0.05); // 50ms
+        const hopSize = Math.floor(sampleRate * 0.01);    // 10ms
+        const envelope = [];
+
+        for (let i = 0; i < maxSamples - windowSize; i += hopSize) {
+            let sum = 0;
+            for (let j = 0; j < windowSize; j++) {
+                sum += Math.abs(channelData[i + j]);
+            }
+            envelope.push(sum / windowSize);
+        }
+
+        console.log(`エンベロープサンプル数: ${envelope.length}`);
+
+        // 200Hzにダウンサンプリング（エンベロープの実効サンプルレート）
+        const envelopeSampleRate = sampleRate / hopSize;
+
+        // 各BPM候補に対して複素正弦波との内積を計算
+        // まず粗い探索(0.1刻み)で範囲を絞る
+        const minBPM = 60;
+        const maxBPM = 240;
+        const coarseStep = 0.1;
+
+        const coarseCorrelations = [];
+
+        for (let bpm = minBPM; bpm <= maxBPM; bpm += coarseStep) {
+            const omega = 2 * Math.PI * (bpm / 60) / envelopeSampleRate;
+            let real = 0;
+            let imag = 0;
+
+            for (let i = 0; i < envelope.length; i++) {
+                real += envelope[i] * Math.cos(omega * i);
+                imag += envelope[i] * Math.sin(omega * i);
+            }
+
+            const magnitude = Math.sqrt(real * real + imag * imag);
+            coarseCorrelations.push({ bpm, magnitude });
+        }
+
+        // 上位複数ピークを見つける
+        coarseCorrelations.sort((a, b) => b.magnitude - a.magnitude);
+
+        // 上位10ピークとその2倍のBPM周辺を細かく探索
+        const peaksToRefine = new Set();
+        for (let i = 0; i < Math.min(10, coarseCorrelations.length); i++) {
+            const peakBPM = coarseCorrelations[i].bpm;
+            peaksToRefine.add(peakBPM);
+
+            // 2倍も追加（オクターブエラー対策）
+            if (peakBPM * 2 <= maxBPM) {
+                peaksToRefine.add(peakBPM * 2);
+            }
+        }
+
+        console.log(`粗い探索のピーク（細かく探索する範囲）:`, Array.from(peaksToRefine).slice(0, 5).join(', '));
+
+        // 各ピーク周辺を細かく探索(0.01刻み、±3 BPMの範囲)
+        const fineStep = 0.01;
+        const correlations = [];
+
+        for (const centerBPM of peaksToRefine) {
+            const fineMin = Math.max(minBPM, centerBPM - 3);
+            const fineMax = Math.min(maxBPM, centerBPM + 3);
+
+            for (let bpm = fineMin; bpm <= fineMax; bpm += fineStep) {
+                const omega = 2 * Math.PI * (bpm / 60) / envelopeSampleRate;
+                let real = 0;
+                let imag = 0;
+
+                for (let i = 0; i < envelope.length; i++) {
+                    real += envelope[i] * Math.cos(omega * i);
+                    imag += envelope[i] * Math.sin(omega * i);
+                }
+
+                const magnitude = Math.sqrt(real * real + imag * imag);
+                correlations.push({ bpm, magnitude });
+            }
+        }
+
+        // BPMで重複を排除（同じBPM値の場合は強度が高い方を残す）
+        const seenBPMs = new Map();
+
+        for (const corr of correlations) {
+            // 0.001精度でキー化（より細かく）
+            const bpmKey = Math.round(corr.bpm * 1000);
+            if (!seenBPMs.has(bpmKey) || seenBPMs.get(bpmKey).magnitude < corr.magnitude) {
+                seenBPMs.set(bpmKey, corr);
+            }
+        }
+
+        // 重複を排除した配列に置き換え
+        correlations.length = 0;
+        for (const corr of seenBPMs.values()) {
+            correlations.push(corr);
+        }
+
+        // 最大相関を持つBPMを探す
+        correlations.sort((a, b) => b.magnitude - a.magnitude);
+
+        console.log('上位BPM候補 (ユニーク):', correlations.slice(0, 10).map(c =>
+            `BPM ${c.bpm.toFixed(1)} (強度: ${c.magnitude.toFixed(2)})`
+        ).join(', '));
+
+        // 特定BPM付近の強度を確認（デバッグ用）
+        const around192 = correlations.filter(c => c.bpm >= 190 && c.bpm <= 194);
+        console.log('190-194付近:', around192.slice(0, 5).map(c =>
+            `BPM ${c.bpm.toFixed(1)} (強度: ${c.magnitude.toFixed(2)})`
+        ).join(', '));
+
+        // オクターブエラー補正: 最上位候補が100未満なら2倍を検討
+        const topBPM = correlations[0].bpm;
+        const topMagnitude = correlations[0].magnitude;
+
+        let detectedBPM;
+
+        if (topBPM < 100) {
+            // topBPMの2倍付近（±5 BPM）に有意な信号があるかチェック
+            const expectedDouble = topBPM * 2; // 96 * 2 = 192
+            const searchMin = expectedDouble - 5; // 187
+            const searchMax = expectedDouble + 5; // 197
+
+            // この範囲でローカルピークを探す（周辺より強度が高いポイント）
+            const highRangeCandidates = correlations.filter(c =>
+                c.bpm >= searchMin && c.bpm <= searchMax
+            );
+
+            console.log(`高BPM範囲 (${searchMin.toFixed(1)}-${searchMax.toFixed(1)}): ${highRangeCandidates.length}個`);
+
+            if (highRangeCandidates.length > 0) {
+                // この範囲の最大値を見つける
+                highRangeCandidates.sort((a, b) => b.magnitude - a.magnitude);
+                const localPeak = highRangeCandidates[0];
+
+                console.log(`高BPM範囲のローカルピーク: BPM ${localPeak.bpm.toFixed(2)} (強度: ${localPeak.magnitude.toFixed(2)})`);
+
+                // ローカルピーク周辺±0.3 BPMの加重平均を計算（より狭い範囲で精密に）
+                const nearPeak = highRangeCandidates.filter(c =>
+                    Math.abs(c.bpm - localPeak.bpm) <= 0.3
+                );
+
+                let weightedSum = 0;
+                let totalWeight = 0;
+
+                for (const corr of nearPeak) {
+                    weightedSum += corr.bpm * corr.magnitude;
+                    totalWeight += corr.magnitude;
+                }
+
+                const weightedAvg = weightedSum / totalWeight;
+                detectedBPM = Math.round(weightedAvg * 100) / 100; // 0.01刻み
+
+                console.log(`ローカルピーク周辺の加重平均: ${nearPeak.length}個, 加重平均=${weightedAvg.toFixed(3)} → ${detectedBPM}`);
+            } else {
+                // 190-200付近に信号がない場合のみ、96付近を2倍する
+                let weightedSum = 0;
+                let totalWeight = 0;
+                const candidates = [];
+
+                for (let i = 0; i < Math.min(20, correlations.length); i++) {
+                    const corr = correlations[i];
+                    if (corr.bpm >= 90 && corr.bpm <= 100) {
+                        const bpm2x = corr.bpm * 2;
+                        weightedSum += bpm2x * corr.magnitude;
+                        totalWeight += corr.magnitude;
+                        candidates.push({ bpm: corr.bpm, bpm2x, magnitude: corr.magnitude });
+                    }
+                }
+
+                const doubledBPMs = candidates.map(c => c.bpm2x);
+
+                if (doubledBPMs.length > 0) {
+                    const weightedAvg = weightedSum / totalWeight;
+                    detectedBPM = Math.round(weightedAvg * 100) / 100; // 0.01刻み
+
+                    const simpleAvg = doubledBPMs.reduce((a, b) => a + b) / doubledBPMs.length;
+                    console.log(`2倍補正: ${doubledBPMs.length}個, 単純平均=${simpleAvg.toFixed(3)}, 加重平均=${weightedAvg.toFixed(3)} → ${detectedBPM}`);
+                } else {
+                    detectedBPM = Math.round(topBPM * 100) / 100;
+                }
+            }
+        } else {
+            // 100以上ならそのまま採用
+            detectedBPM = Math.round(topBPM * 10) / 10;
+        }
+
+        console.log(`✓ 検出BPM: ${detectedBPM}`);
+
+        return detectedBPM;
+    }
+
+    async detectFirstBeat() {
+        // 最初の音の開始位置を検出
+        const channelData = this.audioBuffer.getChannelData(0);
+        const sampleRate = this.audioBuffer.sampleRate;
+
+        // 最大音量を探す（効率的に）
+        let maxAmplitude = 0;
+        for (let i = 0; i < channelData.length; i++) {
+            const abs = Math.abs(channelData[i]);
+            if (abs > maxAmplitude) {
+                maxAmplitude = abs;
+            }
+        }
+
+        // 閾値を設定（最大音量の5%）
+        const threshold = maxAmplitude * 0.05;
+
+        // 最初に閾値を超えるサンプルを探す
+        for (let i = 0; i < channelData.length; i++) {
+            if (Math.abs(channelData[i]) > threshold) {
+                // サンプル位置を秒に変換
+                return i / sampleRate;
+            }
+        }
+
+        return 0; // 見つからなければ0を返す
+    }
+
+    togglePlayback() {
+        if (this.isPlaying) {
+            this.stopMusic();
+        } else {
+            this.playMusic();
+        }
+    }
+
+    playMusic() {
+        if (!this.audioBuffer) return;
+
+        // 既存のソースがあれば停止
+        if (this.sourceNode) {
+            this.sourceNode.stop();
+        }
+
+        console.log(`firstBeatOffset: ${this.firstBeatOffset}秒`);
+
+        // メトロノームと同期する場合
+        if (this.syncWithMetronome && !this.metronome.isPlaying) {
+            // 新しいソースノードを作成
+            this.sourceNode = this.audioContext.createBufferSource();
+            this.sourceNode.buffer = this.audioBuffer;
+            this.sourceNode.connect(this.audioContext.destination);
+
+            // 再生終了時の処理
+            this.sourceNode.onended = () => {
+                this.isPlaying = false;
+                this.updatePlayButton();
+                if (this.syncWithMetronome) {
+                    this.metronome.stop();
+                }
+            };
+
+            // 曲を即座にfirstBeatOffsetの位置から再生開始
+            // start(when, offset) - when: 再生開始時刻, offset: バッファ内の開始位置
+            this.sourceNode.start(this.audioContext.currentTime, this.firstBeatOffset);
+            console.log(`曲を開始: currentTime=${this.audioContext.currentTime}, offset=${this.firstBeatOffset}`);
+
+            // メトロノームも即座に開始
+            this.metronome.start();
+            console.log(`メトロノーム開始: currentTime=${this.audioContext.currentTime}`);
+
+            this.isPlaying = true;
+            this.startTime = this.audioContext.currentTime;
+            this.updatePlayButton();
+        } else {
+            // 同期なしの場合は即座に再生（オフセット適用）
+            this.sourceNode = this.audioContext.createBufferSource();
+            this.sourceNode.buffer = this.audioBuffer;
+            this.sourceNode.connect(this.audioContext.destination);
+
+            this.sourceNode.onended = () => {
+                this.isPlaying = false;
+                this.updatePlayButton();
+            };
+
+            this.sourceNode.start(0, this.firstBeatOffset);
+            this.isPlaying = true;
+            this.startTime = this.audioContext.currentTime;
+            this.updatePlayButton();
+        }
+    }
+
+    stopMusic() {
+        if (this.sourceNode) {
+            this.sourceNode.stop();
+            this.sourceNode = null;
+        }
+        this.isPlaying = false;
+        this.updatePlayButton();
+
+        // メトロノームも停止
+        if (this.syncWithMetronome && this.metronome.isPlaying) {
+            this.metronome.stop();
+        }
+    }
+
+    removeMusic() {
+        this.stopMusic();
+        this.audioBuffer = null;
+        this.fileName = null;
+        this.detectedBPM = null;
+
+        // UI更新
+        document.getElementById('uploadPlaceholder').style.display = 'flex';
+        document.getElementById('musicInfo').style.display = 'none';
+        document.getElementById('audioFileInput').value = '';
+    }
+
+    showMusicInfo() {
+        // アップロードエリアを隠す
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+
+        // 音楽情報を表示
+        const musicInfo = document.getElementById('musicInfo');
+        musicInfo.style.display = 'block';
+
+        document.getElementById('musicFileName').textContent = this.fileName;
+
+        // BPM表示（小数点がある場合は第一位まで表示）
+        if (this.detectedBPM) {
+            const bpmDisplay = Number.isInteger(this.detectedBPM)
+                ? this.detectedBPM
+                : this.detectedBPM.toFixed(1);
+            document.getElementById('detectedBPM').textContent = `${bpmDisplay} BPM`;
+        } else {
+            document.getElementById('detectedBPM').textContent = '-';
+        }
+    }
+
+    showProgress(show) {
+        const progress = document.getElementById('analysisProgress');
+        if (show) {
+            progress.style.display = 'flex';
+            document.getElementById('progressFill').style.width = '70%';
+        } else {
+            progress.style.display = 'none';
+        }
+    }
+
+    updatePlayButton() {
+        const btn = document.getElementById('playMusicBtn');
+        const lang = localStorage.getItem('language') || 'ja';
+
+        if (this.isPlaying) {
+            btn.classList.add('playing');
+            btn.textContent = lang === 'ja' ? '■ 停止' : '■ Stop';
+        } else {
+            btn.classList.remove('playing');
+            btn.textContent = lang === 'ja' ? '▶ 再生' : '▶ Play';
+        }
+    }
+}
+
 // アプリケーション初期化
 let metronome;
 let themeManager;
 let languageManager;
+let musicAnalyzer;
 
 window.addEventListener('DOMContentLoaded', () => {
     metronome = new Metronome();
     themeManager = new ThemeManager();
     languageManager = new LanguageManager();
+    musicAnalyzer = new MusicAnalyzer(metronome);
     console.log('メトロノームアプリが起動しました');
 });
