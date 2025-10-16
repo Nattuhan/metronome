@@ -753,14 +753,37 @@ export class MusicAnalyzer {
         let lastChord = null;
         let lastChordCount = 0; // 連続して同じコードが何回続いているか
 
+        // 時間的スムージング用: 過去のクロマグラムを保存
+        const chromaHistory = [];
+        const smoothingWindow = 3; // 3小節の移動平均
+
         // 小節ごとにクロマグラムを抽出してコード判定
         for (let samplePos = startSample; samplePos < maxSamples - barSamples; samplePos += barSamples) {
             // この小節の範囲のクロマグラムを計算
             const barChroma = this.extractBeatChroma(channelData, samplePos, barSamples);
 
             if (barChroma) {
-                // コード判定
-                const chord = this.detectChordFromChroma(barChroma);
+                // クロマ履歴に追加
+                chromaHistory.push(barChroma);
+
+                // スムージングウィンドウサイズを超えたら古いものを削除
+                if (chromaHistory.length > smoothingWindow) {
+                    chromaHistory.shift();
+                }
+
+                // 移動平均を計算
+                const smoothedChroma = new Array(12).fill(0);
+                for (const chroma of chromaHistory) {
+                    for (let i = 0; i < 12; i++) {
+                        smoothedChroma[i] += chroma[i];
+                    }
+                }
+                for (let i = 0; i < 12; i++) {
+                    smoothedChroma[i] /= chromaHistory.length;
+                }
+
+                // スムージング後のクロマでコード判定
+                const chord = this.detectChordFromChroma(smoothedChroma);
 
                 // 前の小節と異なるコード、または最初の小節の場合は記録
                 if (chord !== lastChord) {
@@ -790,7 +813,7 @@ export class MusicAnalyzer {
     }
 
     extractBeatChroma(channelData, startSample, beatSamples) {
-        // 1拍分のクロマグラムを抽出
+        // 1拍分のクロマグラムを抽出（対数圧縮と正規化を適用）
         const frameSize = 2048;
         const hopSize = frameSize / 2;
         const chromaSum = new Array(12).fill(0);
@@ -802,8 +825,11 @@ export class MusicAnalyzer {
             const chroma = Meyda.extract('chroma', frame);
 
             if (chroma && chroma.length === 12) {
+                // 対数圧縮: log(1 + γ * chroma)
+                // γ = 100（研究論文で推奨される値）
+                const gamma = 100;
                 for (let j = 0; j < 12; j++) {
-                    chromaSum[j] += chroma[j];
+                    chromaSum[j] += Math.log(1 + gamma * chroma[j]);
                 }
                 frameCount++;
             }
@@ -811,8 +837,16 @@ export class MusicAnalyzer {
 
         if (frameCount === 0) return null;
 
-        // 平均クロマグラムを返す
-        return chromaSum.map(sum => sum / frameCount);
+        // 平均クロマグラムを計算
+        const chromaAverage = chromaSum.map(sum => sum / frameCount);
+
+        // L2正規化: ベクトルの長さを1に正規化
+        const l2norm = Math.sqrt(chromaAverage.reduce((sum, val) => sum + val * val, 0));
+        if (l2norm > 0) {
+            return chromaAverage.map(val => val / l2norm);
+        }
+
+        return chromaAverage;
     }
 
     detectChordFromChroma(chroma) {
@@ -840,8 +874,9 @@ export class MusicAnalyzer {
         }
 
         // スコアが低すぎる場合はN.C.（ノーコード）
-        // 閾値を0.5に引き上げてノイズを抑制
-        if (bestScore < 0.5) {
+        // 対数圧縮と正規化後の閾値を0.6に設定
+        // 研究論文では閾値を高めに設定することで誤検出を抑制
+        if (bestScore < 0.6) {
             return 'N.C.';
         }
 
