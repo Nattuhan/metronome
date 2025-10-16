@@ -1756,13 +1756,17 @@ class MusicAnalyzer {
         const width = canvas.offsetWidth;
         const height = canvas.offsetHeight;
 
-        // Canvas解像度を設定
-        canvas.width = width;
-        canvas.height = height;
+        // Canvas解像度を設定（高DPI対応）
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        ctx.scale(dpr, dpr);
 
         // 背景をクリア
         const isDarkMode = !document.body.classList.contains('light-mode');
-        ctx.fillStyle = isDarkMode ? '#2c2c2c' : '#ffffff';
+        ctx.fillStyle = isDarkMode ? '#2c2c2c' : '#f5f5f5';
         ctx.fillRect(0, 0, width, height);
 
         // 中央線を描画
@@ -1778,39 +1782,34 @@ class MusicAnalyzer {
         const step = Math.ceil(channelData.length / width);
         const amp = height / 2;
 
-        // 波形を塗りつぶしで描画（より見やすく）
-        ctx.fillStyle = isDarkMode ? 'rgba(74, 144, 226, 0.7)' : 'rgba(74, 144, 226, 0.7)';
+        // 波形を線で描画（よくある波形ビューアスタイル）
+        ctx.strokeStyle = isDarkMode ? '#4a90e2' : '#2c7fd4';
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(0, height / 2);
 
-        // 上側の波形
         for (let i = 0; i < width; i++) {
-            const slice = channelData.slice(i * step, (i + 1) * step);
-            let max = 0;
-            for (let j = 0; j < slice.length; j++) {
-                if (Math.abs(slice[j]) > Math.abs(max)) {
-                    max = slice[j];
-                }
+            // 各ピクセルに対応するサンプル範囲の最大値と最小値を取得
+            const start = Math.floor(i * step);
+            const end = Math.floor((i + 1) * step);
+
+            let min = 1.0;
+            let max = -1.0;
+
+            for (let j = start; j < end && j < channelData.length; j++) {
+                const sample = channelData[j];
+                if (sample < min) min = sample;
+                if (sample > max) max = sample;
             }
-            const y = (1 - max) * amp;
-            ctx.lineTo(i, y);
+
+            // 最小値から最大値まで縦線を描画
+            const yMin = (1 - min) * amp;
+            const yMax = (1 - max) * amp;
+
+            ctx.moveTo(i + 0.5, yMin);
+            ctx.lineTo(i + 0.5, yMax);
         }
 
-        // 下側の波形（逆順）
-        for (let i = width - 1; i >= 0; i--) {
-            const slice = channelData.slice(i * step, (i + 1) * step);
-            let min = 0;
-            for (let j = 0; j < slice.length; j++) {
-                if (Math.abs(slice[j]) > Math.abs(min) && slice[j] < 0) {
-                    min = slice[j];
-                }
-            }
-            const y = (1 - min) * amp;
-            ctx.lineTo(i, y);
-        }
-
-        ctx.closePath();
-        ctx.fill();
+        ctx.stroke();
     }
 }
 
