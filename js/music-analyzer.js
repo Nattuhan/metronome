@@ -594,16 +594,15 @@ export class MusicAnalyzer {
             console.log(`metronome.isPlaying after start=${this.metronome.isPlaying}`);
 
             // 曲の再生位置から拍の位置を計算
-            // pausedAt（シーク位置）がある場合はそれを使用、そうでない場合は0から開始
-            const timeForBeatCalculation = this.pausedAt > 0 ? this.pausedAt : 0;
-            const elapsedBeats = (timeForBeatCalculation / 60.0) * this.detectedBPM;
+            // offsetを使用（firstBeatOffsetまたはpausedAt）
+            const elapsedBeats = (offset / 60.0) * this.detectedBPM;
             const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
 
             // メトロノームの現在拍を調整
             this.metronome.currentBeat = beatInBar;
             this.metronome.totalBeats = Math.floor(elapsedBeats);
 
-            console.log(`Metronome sync: offset=${offset}秒, timeForBeatCalculation=${timeForBeatCalculation}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${this.metronome.totalBeats}`);
+            console.log(`Metronome sync: offset=${offset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${this.metronome.totalBeats}`);
         }
 
         console.log('========== playMusic END ==========');
