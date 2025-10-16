@@ -612,9 +612,10 @@ export class MusicAnalyzer {
             const chroma = Meyda.extract('chroma', frame);
 
             if (chroma && chroma.length === 12) {
-                // 各音階のエネルギーを合算
+                // 対数圧縮を適用してから合算
+                const gamma = 100;
                 for (let j = 0; j < 12; j++) {
-                    chromaSum[j] += chroma[j];
+                    chromaSum[j] += Math.log(1 + gamma * chroma[j]);
                 }
                 frameCount++;
             }
