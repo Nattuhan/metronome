@@ -614,16 +614,6 @@ export class Metronome {
             this.setTempo(parseFloat(e.target.value));
         });
 
-        // テンポ半分ボタン
-        document.getElementById('tempoHalfBtn').addEventListener('click', () => {
-            this.setTempo(this.tempo * 0.5);
-        });
-
-        // テンポ2倍ボタン
-        document.getElementById('tempoDoubleBtn').addEventListener('click', () => {
-            this.setTempo(this.tempo * 2.0);
-        });
-
         // 拍子選択
         document.getElementById('beatsPerBar').addEventListener('change', (e) => {
             this.setBeatsPerBar(e.target.value);

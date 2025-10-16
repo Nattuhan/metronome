@@ -205,6 +205,15 @@ export class MusicAnalyzer {
         waveformContainer.addEventListener('mouseleave', () => {
             this.isDragging = false;
         });
+
+        // BPM調整ボタン
+        document.getElementById('bpmHalfBtn').addEventListener('click', () => {
+            this.adjustDetectedBPM(0.5);
+        });
+
+        document.getElementById('bpmDoubleBtn').addEventListener('click', () => {
+            this.adjustDetectedBPM(2.0);
+        });
     }
 
     loadSettings() {
@@ -332,6 +341,34 @@ export class MusicAnalyzer {
         if (offsetValue) {
             const offsetSeconds = this.metronomeBeatOffset - this.audioStartOffset;
             offsetValue.textContent = offsetSeconds.toFixed(3);
+        }
+    }
+
+    adjustDetectedBPM(multiplier) {
+        // 検出BPMを調整する（×0.5または×2）
+        if (!this.detectedBPM) {
+            console.log('No BPM detected, cannot adjust');
+            return;
+        }
+
+        // BPMを調整
+        this.detectedBPM = this.detectedBPM * multiplier;
+
+        console.log(`Adjusted BPM: ${this.detectedBPM} (×${multiplier})`);
+
+        // UI更新
+        const bpmDisplay = Number.isInteger(this.detectedBPM)
+            ? this.detectedBPM
+            : this.detectedBPM.toFixed(1);
+        document.getElementById('detectedBPM').textContent = `${bpmDisplay} BPM`;
+
+        // メトロノームのテンポも更新
+        this.metronome.setTempo(this.detectedBPM);
+
+        // 再生中の場合、再生速度を考慮した調整BPMでメトロノームを更新
+        if (this.isPlaying && this.syncWithMetronome) {
+            const adjustedBPM = this.detectedBPM * this.playbackRate;
+            this.metronome.setTempo(adjustedBPM);
         }
     }
 

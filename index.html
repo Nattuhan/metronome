@@ -93,10 +93,6 @@
                             <input type="number" id="tempoInput" min="1" max="300" value="120" step="0.1" class="tempo-input">
                         </label>
                         <input type="range" id="tempoSlider" min="1" max="300" value="120" step="1" class="slider">
-                        <div class="tempo-controls">
-                            <button id="tempoHalfBtn" class="btn-tempo-adjust" data-i18n="tempoHalf">×1/2</button>
-                            <button id="tempoDoubleBtn" class="btn-tempo-adjust" data-i18n="tempoDouble">×2</button>
-                        </div>
                     </div>
 
                     <!-- 拍子とリズムパターン -->
@@ -213,6 +209,10 @@
                             <div class="music-info-item">
                                 <span class="info-label" data-i18n="detectedBPM">Detected BPM:</span>
                                 <span class="info-value" id="detectedBPM">-</span>
+                                <div class="bpm-adjust-controls">
+                                    <button id="bpmHalfBtn" class="btn-bpm-adjust" data-i18n="tempoHalf">×1/2</button>
+                                    <button id="bpmDoubleBtn" class="btn-bpm-adjust" data-i18n="tempoDouble">×2</button>
+                                </div>
                             </div>
                             <div class="music-info-item">
                                 <span class="info-label" data-i18n="detectedKey">Detected Key:</span>

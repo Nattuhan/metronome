@@ -388,7 +388,7 @@ main {
 .music-info-item {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .info-label {
@@ -401,6 +401,47 @@ main {
     font-weight: 600;
     color: #f5f5f5;
     word-break: break-all;
+}
+
+/* BPM調整ボタン */
+.bpm-adjust-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.btn-bpm-adjust {
+    flex: 1;
+    padding: 6px 12px;
+    background: #2c2c2c;
+    border: 2px solid #4a90e2;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #4a90e2;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-bpm-adjust:hover {
+    background: #4a90e2;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-bpm-adjust:active {
+    transform: translateY(0);
+}
+
+body.light-mode .btn-bpm-adjust {
+    background: #ffffff;
+    border-color: #4a90e2;
+    color: #4a90e2;
+}
+
+body.light-mode .btn-bpm-adjust:hover {
+    background: #4a90e2;
+    color: white;
 }
 
 .music-controls {
@@ -821,47 +862,6 @@ body.light-mode #beatOffsetValue {
     margin-left: 10px;
     background: #2c2c2c;
     color: #f5f5f5;
-}
-
-/* テンポ調整ボタン */
-.tempo-controls {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.btn-tempo-adjust {
-    flex: 1;
-    padding: 8px 16px;
-    background: #2c2c2c;
-    border: 2px solid #4a90e2;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #4a90e2;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.btn-tempo-adjust:hover {
-    background: #4a90e2;
-    color: white;
-    transform: translateY(-1px);
-}
-
-.btn-tempo-adjust:active {
-    transform: translateY(0);
-}
-
-body.light-mode .btn-tempo-adjust {
-    background: #ffffff;
-    border-color: #4a90e2;
-    color: #4a90e2;
-}
-
-body.light-mode .btn-tempo-adjust:hover {
-    background: #4a90e2;
-    color: white;
 }
 
 /* スライダー */
