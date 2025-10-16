@@ -382,15 +382,18 @@ export class MusicAnalyzer {
 
         // UI更新: 解析中表示
         this.showProgress(true, 'ファイルを読み込み中...', 0);
+        await new Promise(resolve => setTimeout(resolve, 50)); // UI更新を待つ
 
         try {
             // ファイルを読み込む
             const arrayBuffer = await file.arrayBuffer();
             this.showProgress(true, 'オーディオをデコード中...', 10);
+            await new Promise(resolve => setTimeout(resolve, 50)); // UI更新を待つ
 
             // Web Audio APIでデコード（BPM検出と波形表示用）
             this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
             this.showProgress(true, '波形を準備中...', 20);
+            await new Promise(resolve => setTimeout(resolve, 50)); // UI更新を待つ
 
             // Blob URLを作成（<audio>要素での再生用）
             if (this.audioURL) {
@@ -401,20 +404,24 @@ export class MusicAnalyzer {
             // <audio>要素を作成
             this.createAudioElement();
             this.showProgress(true, 'BPMを検出中...', 30);
+            await new Promise(resolve => setTimeout(resolve, 50)); // UI更新を待つ
 
             // BPM検出と最初の音の位置検出
             this.detectedBPM = await this.detectBPM();
             this.audioStartOffset = await this.detectFirstBeat();
             this.metronomeBeatOffset = this.audioStartOffset; // 初期値は音の開始位置
             this.showProgress(true, 'キーを検出中...', 60);
+            await new Promise(resolve => setTimeout(resolve, 50)); // UI更新を待つ
 
             // キー検出
             this.detectedKey = await this.detectKey();
             this.showProgress(true, 'コード進行を解析中...', 75);
+            await new Promise(resolve => setTimeout(resolve, 50)); // UI更新を待つ
 
             // コード進行検出
             this.chordProgression = await this.detectChordProgression();
             this.showProgress(true, '完了', 95);
+            await new Promise(resolve => setTimeout(resolve, 100)); // UI更新を待つ
 
             // UI更新
             this.showMusicInfo();
