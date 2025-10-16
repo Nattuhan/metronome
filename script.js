@@ -1585,14 +1585,11 @@ class MusicAnalyzer {
 
     stopMusic() {
         if (this.sourceNode) {
-            // 現在の再生位置を保存
-            const currentTime = this.audioContext.currentTime;
-            this.pausedAt = currentTime - this.startTime;
-
             this.sourceNode.stop();
             this.sourceNode = null;
         }
         this.isPlaying = false;
+        this.pausedAt = 0; // 停止したら最初から再生するようにリセット
         this.updatePlayButton();
         this.stopPlayheadUpdate();
 
