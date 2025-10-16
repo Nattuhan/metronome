@@ -10,7 +10,11 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:meyda.js.org)",
       "WebFetch(domain:glitch.com)",
-      "WebFetch(domain:editor.p5js.org)"
+      "WebFetch(domain:editor.p5js.org)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "WebFetch(domain:www.audiolabs-erlangen.de)",
+      "WebFetch(domain:tunebat.com)"
     ],
     "deny": [],
     "ask": []

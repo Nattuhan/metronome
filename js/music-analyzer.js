@@ -115,9 +115,22 @@ export class MusicAnalyzer {
             this.setPlaybackRate(parseFloat(e.target.value));
         });
 
-        // 拍位置を半拍ずらすボタン
-        document.getElementById('shiftBeatBtn').addEventListener('click', () => {
-            this.shiftBeatOffset();
+        // 拍位置を半拍ずらすボタン（旧UI、将来的に削除予定）
+        const shiftBeatBtn = document.getElementById('shiftBeatBtn');
+        if (shiftBeatBtn) {
+            shiftBeatBtn.addEventListener('click', () => {
+                this.shiftBeatOffset();
+            });
+        }
+
+        // 拍位置を前にずらすボタン
+        document.getElementById('shiftBeatBackwardBtn').addEventListener('click', () => {
+            this.shiftBeatOffsetBackward();
+        });
+
+        // 拍位置を後ろにずらすボタン
+        document.getElementById('shiftBeatForwardBtn').addEventListener('click', () => {
+            this.shiftBeatOffsetForward();
         });
 
         // 波形ドラッグで範囲選択、クリックでジャンプ
@@ -254,16 +267,30 @@ export class MusicAnalyzer {
         }
     }
 
-    shiftBeatOffset() {
-        // メトロノームの拍位置を半拍ずらす
+    shiftBeatOffsetBackward() {
+        // メトロノームの拍位置を半拍前にずらす
         if (!this.detectedBPM || !this.audioElement) {
             console.log('BPM not detected or no audio loaded, cannot shift beat');
             return;
         }
 
-        // 半拍分の秒数を計算
         const halfBeatDuration = (60.0 / this.detectedBPM) / 2;
+        this.adjustBeatOffset(-halfBeatDuration);
+    }
 
+    shiftBeatOffsetForward() {
+        // メトロノームの拍位置を半拍後ろにずらす
+        if (!this.detectedBPM || !this.audioElement) {
+            console.log('BPM not detected or no audio loaded, cannot shift beat');
+            return;
+        }
+
+        const halfBeatDuration = (60.0 / this.detectedBPM) / 2;
+        this.adjustBeatOffset(halfBeatDuration);
+    }
+
+    adjustBeatOffset(offsetChange) {
+        // メトロノームの拍位置を調整する共通メソッド
         // 再生中の場合、シフト前の値で現在の拍位置を計算してから更新
         if (this.isPlaying && this.syncWithMetronome && this.metronome.isPlaying) {
             const currentTime = this.audioElement.currentTime;
@@ -272,15 +299,15 @@ export class MusicAnalyzer {
             // シフト前のmetronomeBeatOffsetで計算
             const oldElapsedBeats = ((currentTime - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
 
-            // metronomeBeatOffsetを半拍分シフト
-            this.metronomeBeatOffset += halfBeatDuration;
+            // metronomeBeatOffsetを調整
+            this.metronomeBeatOffset += offsetChange;
 
             // シフト後の新しいmetronomeBeatOffsetで再計算
             const newElapsedBeats = ((currentTime - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
             const beatInBar = Math.floor(newElapsedBeats) % this.metronome.beatsPerBar;
             const totalBeats = Math.floor(newElapsedBeats);
 
-            console.log(`メトロノーム拍位置を半拍シフト: ${halfBeatDuration.toFixed(3)}秒, 新しいオフセット: ${this.metronomeBeatOffset.toFixed(3)}秒`);
+            console.log(`メトロノーム拍位置を調整: ${offsetChange >= 0 ? '+' : ''}${offsetChange.toFixed(3)}秒, 新しいオフセット: ${this.metronomeBeatOffset.toFixed(3)}秒`);
             console.log(`メトロノーム同期を再調整: oldElapsedBeats=${oldElapsedBeats.toFixed(2)}, newElapsedBeats=${newElapsedBeats.toFixed(2)}, beatInBar=${beatInBar}, totalBeats=${totalBeats}`);
 
             this.metronome.currentBeat = beatInBar;
@@ -288,12 +315,29 @@ export class MusicAnalyzer {
             this.metronome.updateVisuals(0);
         } else {
             // 再生中でない場合は、metronomeBeatOffsetを更新してcurrentTimeを0にリセット
-            this.metronomeBeatOffset += halfBeatDuration;
+            this.metronomeBeatOffset += offsetChange;
             this.audioElement.currentTime = 0;
 
-            console.log(`メトロノーム拍位置を半拍シフト: ${halfBeatDuration.toFixed(3)}秒, 新しいオフセット: ${this.metronomeBeatOffset.toFixed(3)}秒`);
+            console.log(`メトロノーム拍位置を調整: ${offsetChange >= 0 ? '+' : ''}${offsetChange.toFixed(3)}秒, 新しいオフセット: ${this.metronomeBeatOffset.toFixed(3)}秒`);
             console.log('再生位置を0にリセット（次回再生時は最初から）');
         }
+
+        // UI表示を更新
+        this.updateBeatOffsetDisplay();
+    }
+
+    updateBeatOffsetDisplay() {
+        // 拍オフセット値を表示
+        const offsetValue = document.getElementById('beatOffsetValue');
+        if (offsetValue) {
+            const offsetSeconds = this.metronomeBeatOffset - this.audioStartOffset;
+            offsetValue.textContent = offsetSeconds.toFixed(3);
+        }
+    }
+
+    shiftBeatOffset() {
+        // メトロノームの拍位置を半拍ずらす（後方互換性のため残す）
+        this.shiftBeatOffsetForward();
     }
 
     async loadAudioFile(file) {
@@ -332,6 +376,7 @@ export class MusicAnalyzer {
             // UI更新
             this.showMusicInfo();
             this.drawWaveform(); // 波形を描画
+            this.updateBeatOffsetDisplay(); // オフセット表示を初期化
             this.showProgress(false);
 
             // 検出されたBPMをメトロノームに反映

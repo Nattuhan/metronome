@@ -247,7 +247,13 @@
                                     <input type="checkbox" id="countInEnabled" class="checkbox-input">
                                     <span data-i18n="countInEnabled">Count-in before playback</span>
                                 </label>
-                                <button id="shiftBeatBtn" class="btn-shift-beat" data-i18n="shiftBeat">Shift beat by half</button>
+                                <div class="beat-shift-controls">
+                                    <button id="shiftBeatBackwardBtn" class="btn-shift-beat-small">◀</button>
+                                    <div class="beat-shift-display">
+                                        <span data-i18n="beatOffset">Beat Offset</span>: <span id="beatOffsetValue">0.000</span>s
+                                    </div>
+                                    <button id="shiftBeatForwardBtn" class="btn-shift-beat-small">▶</button>
+                                </div>
                             </div>
                         </div>
                         <div id="analysisProgress" class="analysis-progress" style="display: none;">

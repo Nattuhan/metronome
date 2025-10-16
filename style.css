@@ -495,6 +495,74 @@ body.light-mode .btn-shift-beat:hover {
     color: white;
 }
 
+/* 拍位置調整コントロール */
+.beat-shift-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.btn-shift-beat-small {
+    padding: 8px 16px;
+    background: #2c2c2c;
+    border: 2px solid #ff9800;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ff9800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 50px;
+}
+
+.btn-shift-beat-small:hover {
+    background: #ff9800;
+    color: white;
+    transform: scale(1.05);
+}
+
+.btn-shift-beat-small:active {
+    transform: scale(0.95);
+}
+
+.beat-shift-display {
+    flex: 1;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #ccc;
+    background: #2c2c2c;
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: 2px solid #444;
+}
+
+#beatOffsetValue {
+    font-weight: 700;
+    color: #ff9800;
+}
+
+body.light-mode .btn-shift-beat-small {
+    background: #ffffff;
+    border-color: #f57c00;
+    color: #f57c00;
+}
+
+body.light-mode .btn-shift-beat-small:hover {
+    background: #f57c00;
+    color: white;
+}
+
+body.light-mode .beat-shift-display {
+    background: #f8f9fa;
+    color: #666;
+    border-color: #ccc;
+}
+
+body.light-mode #beatOffsetValue {
+    color: #f57c00;
+}
+
 .analysis-progress {
     display: flex;
     flex-direction: column;
