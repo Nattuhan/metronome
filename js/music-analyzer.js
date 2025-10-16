@@ -588,21 +588,22 @@ export class MusicAnalyzer {
                 console.log(`metronome.isPlaying after stop=${this.metronome.isPlaying}`);
             }
 
-            // メトロノームを開始し、現在の再生位置に基づいて拍を計算
-            console.log('Starting metronome...');
-            this.metronome.start();
-            console.log(`metronome.isPlaying after start=${this.metronome.isPlaying}`);
-
-            // 曲の再生位置から拍の位置を計算
+            // 曲の再生位置から拍の位置を計算（メトロノーム開始前に計算）
             // offsetを使用（firstBeatOffsetまたはpausedAt）
             const elapsedBeats = (offset / 60.0) * this.detectedBPM;
             const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
+            const totalBeats = Math.floor(elapsedBeats);
 
-            // メトロノームの現在拍を調整
+            console.log(`Metronome sync: offset=${offset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${totalBeats}`);
+
+            // メトロノームの拍位置を事前に設定
             this.metronome.currentBeat = beatInBar;
-            this.metronome.totalBeats = Math.floor(elapsedBeats);
+            this.metronome.totalBeats = totalBeats;
 
-            console.log(`Metronome sync: offset=${offset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${this.metronome.totalBeats}`);
+            // メトロノームを開始（skipFirstBeat=trueで1拍目の即座再生をスキップ）
+            console.log('Starting metronome with skipFirstBeat=true...');
+            this.metronome.start(true);
+            console.log(`metronome.isPlaying after start=${this.metronome.isPlaying}`);
         }
 
         console.log('========== playMusic END ==========');

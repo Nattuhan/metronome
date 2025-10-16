@@ -247,7 +247,7 @@ export class Metronome {
         }
     }
 
-    start() {
+    start(skipFirstBeat = false) {
         if (this.isPlaying) return;
 
         if (!this.audioContext) {
@@ -259,19 +259,27 @@ export class Metronome {
         }
 
         this.isPlaying = true;
-        this.currentBeat = 0;
-        this.totalBeats = 0;
+
+        // skipFirstBeatがfalseの場合のみ、拍をリセット
+        if (!skipFirstBeat) {
+            this.currentBeat = 0;
+            this.totalBeats = 0;
+        }
+
         this.nextNoteTime = this.audioContext.currentTime;
 
-        // 1拍目を即座に再生（音とビジュアル）
-        this.playRhythmPattern(0, this.audioContext.currentTime);
-        this.updateVisuals(true, 0, 1); // totalBeatCount=1で右側に動かす
-        // totalBeatsは0のまま（次のscheduleNoteで1になる）
+        // skipFirstBeatがfalseの場合のみ、1拍目を即座に再生
+        if (!skipFirstBeat) {
+            // 1拍目を即座に再生（音とビジュアル）
+            this.playRhythmPattern(0, this.audioContext.currentTime);
+            this.updateVisuals(true, 0, 1); // totalBeatCount=1で右側に動かす
+            // totalBeatsは0のまま（次のscheduleNoteで1になる）
 
-        // 次の拍のスケジュール時間を設定
-        const secondsPerBeat = 60.0 / this.tempo;
-        this.nextNoteTime += secondsPerBeat;
-        this.currentBeat = 1; // 次は2拍目から
+            // 次の拍のスケジュール時間を設定
+            const secondsPerBeat = 60.0 / this.tempo;
+            this.nextNoteTime += secondsPerBeat;
+            this.currentBeat = 1; // 次は2拍目から
+        }
 
         this.timerID = setInterval(() => this.scheduler(), 25);
 
