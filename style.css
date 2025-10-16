@@ -453,6 +453,46 @@ main {
 
 .sync-controls {
     margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 拍位置ずらしボタン */
+.btn-shift-beat {
+    width: 100%;
+    padding: 10px 15px;
+    background: #2c2c2c;
+    border: 2px solid #ff9800;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #ff9800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 5px;
+}
+
+.btn-shift-beat:hover {
+    background: #ff9800;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.btn-shift-beat:active {
+    transform: translateY(0);
+}
+
+body.light-mode .btn-shift-beat {
+    background: #ffffff;
+    border-color: #f57c00;
+    color: #f57c00;
+}
+
+body.light-mode .btn-shift-beat:hover {
+    background: #f57c00;
+    color: white;
 }
 
 .analysis-progress {
@@ -1556,5 +1596,76 @@ body.light-mode .playback-rate-input {
     background: #f8f9fa;
     color: #333;
     border-color: #ccc;
+}
+
+/* コード進行表示（横スクロール） */
+.chord-progression-display {
+    display: none; /* 初期状態は非表示 */
+    background: #2c2c2c;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 15px 0;
+    overflow: hidden; /* スクロールバー非表示 */
+    position: relative;
+}
+
+.chord-progression-display.active {
+    display: block;
+}
+
+.chord-bars-container {
+    display: flex;
+    gap: 0;
+    transition: transform 0.5s ease;
+}
+
+.chord-bar {
+    flex-shrink: 0;
+    width: 120px;
+    background: #333;
+    padding: 20px 15px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #f5f5f5;
+    transition: all 0.3s ease;
+    border-right: 2px solid #222;
+}
+
+.chord-bar:last-child {
+    border-right: none;
+}
+
+.chord-bar.active {
+    background: #4CAF50;
+    color: white;
+    transform: scaleY(1.1);
+}
+
+.chord-bar-number {
+    display: none; /* Bar番号を非表示 */
+}
+
+.chord-beats {
+    /* シンプル表示 */
+}
+
+.chord-beat {
+    /* コードテキストのみ表示 */
+}
+
+body.light-mode .chord-progression-display {
+    background: #f8f8f8;
+}
+
+body.light-mode .chord-bar {
+    background: #e0e0e0;
+    color: #333;
+    border-right-color: #ccc;
+}
+
+body.light-mode .chord-bar.active {
+    background: #4CAF50;
+    color: white;
 }
 

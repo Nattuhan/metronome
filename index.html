@@ -214,6 +214,9 @@
                                 <span class="info-label" data-i18n="detectedKey">Detected Key:</span>
                                 <span class="info-value" id="detectedKey">-</span>
                             </div>
+                            <div class="chord-progression-display" id="chordProgressionDisplay">
+                                <!-- 4小節分のコード進行がここに表示される -->
+                            </div>
                             <div class="waveform-container" id="waveformContainer">
                                 <canvas id="waveformCanvas"></canvas>
                                 <div class="waveform-playhead" id="waveformPlayhead"></div>
@@ -244,6 +247,7 @@
                                     <input type="checkbox" id="countInEnabled" class="checkbox-input">
                                     <span data-i18n="countInEnabled">Count-in before playback</span>
                                 </label>
+                                <button id="shiftBeatBtn" class="btn-shift-beat" data-i18n="shiftBeat">Shift beat by half</button>
                             </div>
                         </div>
                         <div id="analysisProgress" class="analysis-progress" style="display: none;">

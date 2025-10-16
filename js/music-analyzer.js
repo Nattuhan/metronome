@@ -114,6 +114,11 @@ export class MusicAnalyzer {
             this.setPlaybackRate(parseFloat(e.target.value));
         });
 
+        // 拍位置を半拍ずらすボタン
+        document.getElementById('shiftBeatBtn').addEventListener('click', () => {
+            this.shiftBeatOffset();
+        });
+
         // 波形ドラッグで範囲選択、クリックでジャンプ
         const waveformContainer = document.getElementById('waveformContainer');
 
@@ -245,6 +250,37 @@ export class MusicAnalyzer {
         if (this.syncWithMetronome && this.detectedBPM) {
             const adjustedBPM = this.detectedBPM * this.playbackRate;
             this.metronome.setTempo(adjustedBPM);
+        }
+    }
+
+    shiftBeatOffset() {
+        // 拍位置を半拍ずらす
+        if (!this.detectedBPM) {
+            console.log('BPM not detected, cannot shift beat');
+            return;
+        }
+
+        // 半拍分の秒数を計算
+        const halfBeatDuration = (60.0 / this.detectedBPM) / 2;
+
+        // firstBeatOffsetを半拍分シフト
+        this.firstBeatOffset += halfBeatDuration;
+
+        console.log(`拍位置を半拍シフト: ${halfBeatDuration.toFixed(3)}秒, 新しいオフセット: ${this.firstBeatOffset.toFixed(3)}秒`);
+
+        // メトロノームが再生中の場合、同期を再調整
+        if (this.isPlaying && this.syncWithMetronome && this.metronome.isPlaying) {
+            const currentTime = this.audioElement.currentTime;
+            const adjustedBPM = this.detectedBPM * this.playbackRate;
+            const elapsedBeats = ((currentTime - this.firstBeatOffset) / 60.0) * adjustedBPM;
+            const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
+            const totalBeats = Math.floor(elapsedBeats);
+
+            console.log(`メトロノーム同期を再調整: beatInBar=${beatInBar}, totalBeats=${totalBeats}`);
+
+            this.metronome.currentBeat = beatInBar;
+            this.metronome.totalBeats = totalBeats;
+            this.metronome.updateVisuals(0);
         }
     }
 
@@ -552,31 +588,16 @@ export class MusicAnalyzer {
     }
 
     async detectFirstBeat() {
-        // 最初の音の開始位置を検出
+        // 最初の音の位置を検出（シンプルな閾値ベース）
         const channelData = this.audioBuffer.getChannelData(0);
         const sampleRate = this.audioBuffer.sampleRate;
 
-        // 最大音量を探す（効率的に）
-        let maxAmplitude = 0;
         for (let i = 0; i < channelData.length; i++) {
-            const abs = Math.abs(channelData[i]);
-            if (abs > maxAmplitude) {
-                maxAmplitude = abs;
-            }
-        }
-
-        // 閾値を設定（最大音量の5%）
-        const threshold = maxAmplitude * 0.05;
-
-        // 最初に閾値を超えるサンプルを探す
-        for (let i = 0; i < channelData.length; i++) {
-            if (Math.abs(channelData[i]) > threshold) {
-                // サンプル位置を秒に変換
+            if (Math.abs(channelData[i]) > 0.01) {
                 return i / sampleRate;
             }
         }
-
-        return 0; // 見つからなければ0を返す
+        return 0;
     }
 
     async detectKey() {

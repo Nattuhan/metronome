@@ -65,7 +65,8 @@ export class LanguageManager {
                 analyzing: '解析中...',
                 musicVolume: '曲の音量',
                 playbackRate: '再生速度',
-                countInEnabled: '再生前にカウントイン'
+                countInEnabled: '再生前にカウントイン',
+                shiftBeat: '拍位置を半拍ずらす'
             },
             en: {
                 title: 'Metronome',
@@ -126,7 +127,8 @@ export class LanguageManager {
                 analyzing: 'Analyzing...',
                 musicVolume: 'Music Volume',
                 playbackRate: 'Playback Rate',
-                countInEnabled: 'Count-in before playback'
+                countInEnabled: 'Count-in before playback',
+                shiftBeat: 'Shift beat by half'
             }
         };
 
