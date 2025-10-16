@@ -25,7 +25,8 @@ export class MusicAnalyzer {
         this.detectedKey = null; // 検出されたキー（例: "C Major"）
         this.chordProgression = []; // コード進行データ: [{ bar, beat, chord }, ...]
         this.audioURL = null; // Blob URLを保存
-        this.firstBeatOffset = 0; // 最初の音の開始位置（秒）
+        this.audioStartOffset = 0; // 最初の音の開始位置（秒、検出後変更されない）
+        this.metronomeBeatOffset = 0; // メトロノームの拍位置（秒、ボタンで調整可能）
         this.playheadUpdateInterval = null; // 再生線更新用
 
         // ループ範囲選択用
@@ -254,7 +255,7 @@ export class MusicAnalyzer {
     }
 
     shiftBeatOffset() {
-        // 拍位置を半拍ずらす
+        // メトロノームの拍位置を半拍ずらす
         if (!this.detectedBPM || !this.audioElement) {
             console.log('BPM not detected or no audio loaded, cannot shift beat');
             return;
@@ -263,16 +264,16 @@ export class MusicAnalyzer {
         // 半拍分の秒数を計算
         const halfBeatDuration = (60.0 / this.detectedBPM) / 2;
 
-        // firstBeatOffsetを半拍分シフト
-        this.firstBeatOffset += halfBeatDuration;
+        // metronomeBeatOffsetを半拍分シフト（audioStartOffsetは変更しない）
+        this.metronomeBeatOffset += halfBeatDuration;
 
-        console.log(`拍位置を半拍シフト: ${halfBeatDuration.toFixed(3)}秒, 新しいオフセット: ${this.firstBeatOffset.toFixed(3)}秒`);
+        console.log(`メトロノーム拍位置を半拍シフト: ${halfBeatDuration.toFixed(3)}秒, 新しいオフセット: ${this.metronomeBeatOffset.toFixed(3)}秒`);
 
         // 再生中の場合、同期を再調整
         if (this.isPlaying && this.syncWithMetronome && this.metronome.isPlaying) {
             const currentTime = this.audioElement.currentTime;
             const adjustedBPM = this.detectedBPM * this.playbackRate;
-            const elapsedBeats = ((currentTime - this.firstBeatOffset) / 60.0) * adjustedBPM;
+            const elapsedBeats = ((currentTime - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
             const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
             const totalBeats = Math.floor(elapsedBeats);
 
@@ -312,7 +313,8 @@ export class MusicAnalyzer {
 
             // BPM検出と最初の音の位置検出
             this.detectedBPM = await this.detectBPM();
-            this.firstBeatOffset = await this.detectFirstBeat();
+            this.audioStartOffset = await this.detectFirstBeat();
+            this.metronomeBeatOffset = this.audioStartOffset; // 初期値は音の開始位置
 
             // キー検出
             this.detectedKey = await this.detectKey();
@@ -800,7 +802,7 @@ export class MusicAnalyzer {
         const chordProgression = [];
 
         // 最初の音の位置から開始
-        const startSample = Math.floor(this.firstBeatOffset * sampleRate);
+        const startSample = Math.floor(this.audioStartOffset * sampleRate);
 
         // 曲全体を解析
         const maxSamples = channelData.length;
@@ -949,7 +951,8 @@ export class MusicAnalyzer {
         console.log(`audioElement exists=${!!this.audioElement}`);
         console.log(`isPlaying=${this.isPlaying}`);
         console.log(`audioElement.currentTime=${this.audioElement ? this.audioElement.currentTime : 'N/A'}`);
-        console.log(`firstBeatOffset=${this.firstBeatOffset}`);
+        console.log(`audioStartOffset=${this.audioStartOffset}`);
+        console.log(`metronomeBeatOffset=${this.metronomeBeatOffset}`);
         console.log(`loopStart=${this.loopStart}, loopEnd=${this.loopEnd}`);
         console.log(`countInEnabled=${this.countInEnabled}`);
 
@@ -959,13 +962,13 @@ export class MusicAnalyzer {
         }
 
         // 停止状態（currentTime=0）から再生する場合、無音部分をスキップ
-        if (this.audioElement.currentTime === 0 && this.firstBeatOffset > 0) {
-            console.log(`Skipping silence: jumping to ${this.firstBeatOffset}秒`);
-            this.audioElement.currentTime = this.firstBeatOffset;
+        if (this.audioElement.currentTime === 0 && this.audioStartOffset > 0) {
+            console.log(`Skipping silence: jumping to ${this.audioStartOffset}秒`);
+            this.audioElement.currentTime = this.audioStartOffset;
         }
 
         // カウントインが有効で、かつ最初から再生する場合のみカウントインを実行
-        if (this.countInEnabled && this.audioElement.currentTime === this.firstBeatOffset && this.syncWithMetronome) {
+        if (this.countInEnabled && this.audioElement.currentTime === this.audioStartOffset && this.syncWithMetronome) {
             console.log('Executing count-in...');
             this.executeCountIn();
             return; // カウントイン後に自動的にplayMusicが再度呼ばれる
@@ -999,12 +1002,12 @@ export class MusicAnalyzer {
                 // メトロノームのテンポを調整BPMに設定
                 this.metronome.setTempo(adjustedBPM);
 
-                // 曲の再生位置から拍の位置を計算（無音部分を除いた実際の経過時間を使用）
-                const elapsedBeats = ((startOffset - this.firstBeatOffset) / 60.0) * adjustedBPM;
+                // 曲の再生位置から拍の位置を計算（メトロノーム拍オフセットを使用）
+                const elapsedBeats = ((startOffset - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
                 const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
                 const totalBeats = Math.floor(elapsedBeats);
 
-                console.log(`Metronome sync: offset=${startOffset}秒, firstBeatOffset=${this.firstBeatOffset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${totalBeats}`);
+                console.log(`Metronome sync: offset=${startOffset}秒, metronomeBeatOffset=${this.metronomeBeatOffset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${totalBeats}`);
 
                 // メトロノームの拍位置を事前に設定
                 this.metronome.currentBeat = beatInBar;
@@ -1092,11 +1095,11 @@ export class MusicAnalyzer {
             // メトロノームと同期している場合、拍位置を再計算
             if (this.syncWithMetronome && this.metronome.isPlaying) {
                 const adjustedBPM = this.detectedBPM * this.playbackRate;
-                const elapsedBeats = ((targetTime - this.firstBeatOffset) / 60.0) * adjustedBPM;
+                const elapsedBeats = ((targetTime - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
                 const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
                 const totalBeats = Math.floor(elapsedBeats);
 
-                console.log(`Resyncing metronome after seek: offset=${targetTime}秒, firstBeatOffset=${this.firstBeatOffset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${totalBeats}`);
+                console.log(`Resyncing metronome after seek: offset=${targetTime}秒, metronomeBeatOffset=${this.metronomeBeatOffset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${totalBeats}`);
 
                 // メトロノームの拍位置を更新
                 this.metronome.currentBeat = beatInBar;
@@ -1193,7 +1196,7 @@ export class MusicAnalyzer {
         const duration = this.audioBuffer.duration;
         const beatDuration = 60.0 / this.detectedBPM;
         const beatsPerBar = this.metronome.beatsPerBar;
-        const totalBars = Math.ceil((duration - this.firstBeatOffset) / (beatDuration * beatsPerBar));
+        const totalBars = Math.ceil((duration - this.audioStartOffset) / (beatDuration * beatsPerBar));
 
         // HTMLを構築（最大60小節まで）
         const maxBars = Math.min(totalBars, 60);
@@ -1233,7 +1236,7 @@ export class MusicAnalyzer {
         // 現在再生中の位置に応じてコードをハイライトし、スクロール
         if (!this.isPlaying || !this.detectedBPM || this.chordProgression.length === 0) return;
 
-        const currentTime = this.audioElement.currentTime - this.firstBeatOffset;
+        const currentTime = this.audioElement.currentTime - this.audioStartOffset;
         const beatDuration = 60.0 / this.detectedBPM;
         const beatsPerBar = this.metronome.beatsPerBar;
 
