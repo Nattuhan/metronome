@@ -1458,9 +1458,9 @@ body.light-mode .progress-text {
     position: absolute;
     top: 0;
     height: 100%;
-    background: rgba(74, 144, 226, 0.3);
-    border-left: 2px solid #4a90e2;
-    border-right: 2px solid #4a90e2;
+    background: rgba(255, 152, 0, 0.3);
+    border-left: 2px solid #ff9800;
+    border-right: 2px solid #ff9800;
     pointer-events: none;
     z-index: 5;
     display: none;
@@ -1476,9 +1476,9 @@ body.light-mode .waveform-container {
 }
 
 body.light-mode .waveform-selection {
-    background: rgba(74, 144, 226, 0.2);
-    border-left-color: #2c7fd4;
-    border-right-color: #2c7fd4;
+    background: rgba(255, 152, 0, 0.25);
+    border-left-color: #f57c00;
+    border-right-color: #f57c00;
 }
 
 /* 曲の音量コントロール */
