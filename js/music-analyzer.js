@@ -1075,11 +1075,16 @@ export class MusicAnalyzer {
                 console.log('Starting metronome with skipFirstBeat=true...');
                 this.metronome.start(true);
 
-                // nextNoteTimeを調整して、次の音がmetronomeBeatOffsetで鳴るようにする
-                const timeUntilNextBeat = this.metronomeBeatOffset - startOffset;
-                this.metronome.nextNoteTime = this.audioContext.currentTime + timeUntilNextBeat;
+                // 次の拍までの時間を計算
+                // metronomeBeatOffsetからの経過拍数に基づいて、次の拍位置を計算
+                const beatDuration = 60.0 / adjustedBPM;
+                const nextBeatNumber = Math.floor(elapsedBeats) + 1; // 次の拍番号
+                const timeToNextBeat = (nextBeatNumber - elapsedBeats) * beatDuration;
 
-                console.log(`Adjusted nextNoteTime: currentTime=${this.audioContext.currentTime.toFixed(3)}, timeUntilNextBeat=${timeUntilNextBeat.toFixed(3)}, nextNoteTime=${this.metronome.nextNoteTime.toFixed(3)}`);
+                // nextNoteTimeを調整して、次の拍で音が鳴るようにする
+                this.metronome.nextNoteTime = this.audioContext.currentTime + timeToNextBeat;
+
+                console.log(`Adjusted nextNoteTime: elapsedBeats=${elapsedBeats.toFixed(3)}, nextBeatNumber=${nextBeatNumber}, timeToNextBeat=${timeToNextBeat.toFixed(3)}秒, nextNoteTime=${this.metronome.nextNoteTime.toFixed(3)}`);
             }
 
             console.log('========== playMusic END ==========');
