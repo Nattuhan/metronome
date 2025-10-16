@@ -381,14 +381,16 @@ export class MusicAnalyzer {
         this.fileName = file.name;
 
         // UI更新: 解析中表示
-        this.showProgress(true);
+        this.showProgress(true, 'ファイルを読み込み中...', 0);
 
         try {
             // ファイルを読み込む
             const arrayBuffer = await file.arrayBuffer();
+            this.showProgress(true, 'オーディオをデコード中...', 10);
 
             // Web Audio APIでデコード（BPM検出と波形表示用）
             this.audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+            this.showProgress(true, '波形を準備中...', 20);
 
             // Blob URLを作成（<audio>要素での再生用）
             if (this.audioURL) {
@@ -398,17 +400,21 @@ export class MusicAnalyzer {
 
             // <audio>要素を作成
             this.createAudioElement();
+            this.showProgress(true, 'BPMを検出中...', 30);
 
             // BPM検出と最初の音の位置検出
             this.detectedBPM = await this.detectBPM();
             this.audioStartOffset = await this.detectFirstBeat();
             this.metronomeBeatOffset = this.audioStartOffset; // 初期値は音の開始位置
+            this.showProgress(true, 'キーを検出中...', 60);
 
             // キー検出
             this.detectedKey = await this.detectKey();
+            this.showProgress(true, 'コード進行を解析中...', 75);
 
             // コード進行検出
             this.chordProgression = await this.detectChordProgression();
+            this.showProgress(true, '完了', 95);
 
             // UI更新
             this.showMusicInfo();
@@ -1379,11 +1385,33 @@ export class MusicAnalyzer {
         }
     }
 
-    showProgress(show) {
+    showProgress(show, message = '解析中...', percentage = 0) {
         const progress = document.getElementById('analysisProgress');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
         if (show) {
             progress.style.display = 'flex';
-            document.getElementById('progressFill').style.width = '70%';
+            progressFill.style.width = `${percentage}%`;
+
+            // 言語に応じてメッセージを表示
+            const lang = localStorage.getItem('language') || 'ja';
+            if (lang === 'en') {
+                // 簡易的な英訳マップ
+                const translations = {
+                    'ファイルを読み込み中...': 'Loading file...',
+                    'オーディオをデコード中...': 'Decoding audio...',
+                    '波形を準備中...': 'Preparing waveform...',
+                    'BPMを検出中...': 'Detecting BPM...',
+                    'キーを検出中...': 'Detecting key...',
+                    'コード進行を解析中...': 'Analyzing chord progression...',
+                    '完了': 'Complete',
+                    '解析中...': 'Analyzing...'
+                };
+                progressText.textContent = translations[message] || message;
+            } else {
+                progressText.textContent = message;
+            }
         } else {
             progress.style.display = 'none';
         }
