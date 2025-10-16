@@ -203,8 +203,9 @@
                                 <span class="info-label" data-i18n="detectedBPM">Detected BPM:</span>
                                 <span class="info-value" id="detectedBPM">-</span>
                             </div>
-                            <div class="waveform-container">
+                            <div class="waveform-container" id="waveformContainer">
                                 <canvas id="waveformCanvas"></canvas>
+                                <div class="waveform-playhead" id="waveformPlayhead"></div>
                             </div>
                             <div class="music-controls">
                                 <button id="playMusicBtn" class="btn-music-control" data-i18n="playMusic">▶ Play</button>
@@ -217,7 +218,7 @@
                             </div>
                             <div class="sync-controls">
                                 <label class="checkbox-label">
-                                    <input type="checkbox" id="syncWithMetronome" class="checkbox-input">
+                                    <input type="checkbox" id="syncWithMetronome" class="checkbox-input" checked>
                                     <span data-i18n="syncWithMetronome">Sync with metronome</span>
                                 </label>
                             </div>

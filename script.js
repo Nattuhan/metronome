@@ -1118,9 +1118,11 @@ class MusicAnalyzer {
         this.isPlaying = false;
         this.fileName = null;
         this.detectedBPM = null;
-        this.syncWithMetronome = false;
+        this.syncWithMetronome = true; // デフォルトでオン
         this.startTime = 0;
+        this.pausedAt = 0; // 一時停止した位置（秒）
         this.firstBeatOffset = 0; // 最初の音の開始位置（秒）
+        this.playheadUpdateInterval = null; // 再生線更新用
 
         this.initEventListeners();
     }
@@ -1182,6 +1184,18 @@ class MusicAnalyzer {
         // 曲の音量スライダー
         document.getElementById('musicVolumeSlider').addEventListener('input', (e) => {
             this.setMusicVolume(parseInt(e.target.value));
+        });
+
+        // 波形クリックでジャンプ
+        const waveformContainer = document.getElementById('waveformContainer');
+        waveformContainer.addEventListener('click', (e) => {
+            if (!this.audioBuffer) return;
+
+            const rect = waveformContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const ratio = clickX / rect.width;
+
+            this.seekTo(ratio);
         });
     }
 
@@ -1467,74 +1481,120 @@ class MusicAnalyzer {
     }
 
     playMusic() {
-        if (!this.audioBuffer) return;
+        console.log('========== playMusic START ==========');
+        console.log(`audioBuffer exists=${!!this.audioBuffer}`);
+        console.log(`isPlaying=${this.isPlaying}`);
+        console.log(`pausedAt=${this.pausedAt}`);
+        console.log(`firstBeatOffset=${this.firstBeatOffset}`);
 
-        // 既存のソースがあれば停止
-        if (this.sourceNode) {
-            this.sourceNode.stop();
+        if (!this.audioBuffer) {
+            console.log('No audioBuffer, returning');
+            return;
         }
 
-        console.log(`firstBeatOffset: ${this.firstBeatOffset}秒`);
+        // 既存のソースがあれば停止してonendedをクリア
+        if (this.sourceNode) {
+            try {
+                console.log('Stopping existing sourceNode in playMusic...');
+                this.sourceNode.onended = null; // イベントハンドラをクリア
+                this.sourceNode.stop();
+            } catch (e) {
+                console.log('sourceNode stop error in playMusic:', e.message);
+            }
+            this.sourceNode = null;
+        }
 
-        // メトロノームと同期する場合
-        if (this.syncWithMetronome && !this.metronome.isPlaying) {
-            // 新しいソースノードとGainNodeを作成
-            this.sourceNode = this.audioContext.createBufferSource();
-            this.gainNode = this.audioContext.createGain();
-            this.sourceNode.buffer = this.audioBuffer;
-            this.gainNode.gain.value = this.musicVolume;
-            this.sourceNode.connect(this.gainNode);
-            this.gainNode.connect(this.audioContext.destination);
+        const offset = this.pausedAt || this.firstBeatOffset;
+        console.log(`offset=${offset}秒, audioBuffer.duration=${this.audioBuffer.duration}秒`);
 
-            // 再生終了時の処理
-            this.sourceNode.onended = () => {
+        // offsetが曲の長さを超えていないかチェック
+        if (offset >= this.audioBuffer.duration) {
+            console.log('ERROR: offset exceeds duration, resetting to 0');
+            this.pausedAt = 0;
+            offset = this.firstBeatOffset;
+        }
+
+        // 新しいソースノードとGainNodeを作成
+        this.sourceNode = this.audioContext.createBufferSource();
+        this.gainNode = this.audioContext.createGain();
+        this.sourceNode.buffer = this.audioBuffer;
+        this.gainNode.gain.value = this.musicVolume;
+        this.sourceNode.connect(this.gainNode);
+        this.gainNode.connect(this.audioContext.destination);
+        console.log('New sourceNode created and connected');
+
+        // 再生終了時の処理（このsourceNodeへの参照を保持）
+        const currentSourceNode = this.sourceNode;
+        this.sourceNode.onended = () => {
+            console.log('sourceNode ended event fired');
+            // このイベントが現在のsourceNodeのものか確認
+            if (this.sourceNode === currentSourceNode) {
+                console.log('Ending playback (valid onended event)');
                 this.isPlaying = false;
+                this.pausedAt = 0;
                 this.updatePlayButton();
+                this.stopPlayheadUpdate();
                 if (this.syncWithMetronome) {
                     this.metronome.stop();
                 }
-            };
+            } else {
+                console.log('Ignoring onended event from old sourceNode');
+            }
+        };
 
-            // 曲を即座にfirstBeatOffsetの位置から再生開始
-            // start(when, offset) - when: 再生開始時刻, offset: バッファ内の開始位置
-            this.sourceNode.start(this.audioContext.currentTime, this.firstBeatOffset);
-            console.log(`曲を開始: currentTime=${this.audioContext.currentTime}, offset=${this.firstBeatOffset}`);
+        // 曲を再生開始
+        this.sourceNode.start(this.audioContext.currentTime, offset);
+        this.isPlaying = true;
+        this.startTime = this.audioContext.currentTime - offset;
+        console.log(`sourceNode started at offset=${offset}, isPlaying=${this.isPlaying}, startTime=${this.startTime}`);
 
-            // メトロノームも即座に開始
+        this.updatePlayButton();
+        this.startPlayheadUpdate();
+        console.log('PlayButton and Playhead updated');
+
+        // メトロノームと同期する場合
+        if (this.syncWithMetronome) {
+            console.log('Syncing with metronome...');
+            console.log(`metronome.isPlaying before stop=${this.metronome.isPlaying}`);
+
+            // メトロノームが再生中なら停止
+            if (this.metronome.isPlaying) {
+                console.log('Stopping metronome...');
+                this.metronome.stop();
+                console.log(`metronome.isPlaying after stop=${this.metronome.isPlaying}`);
+            }
+
+            // メトロノームを開始し、現在の再生位置に基づいて拍を計算
+            console.log('Starting metronome...');
             this.metronome.start();
-            console.log(`メトロノーム開始: currentTime=${this.audioContext.currentTime}`);
+            console.log(`metronome.isPlaying after start=${this.metronome.isPlaying}`);
 
-            this.isPlaying = true;
-            this.startTime = this.audioContext.currentTime;
-            this.updatePlayButton();
-        } else {
-            // 同期なしの場合は即座に再生（オフセット適用）
-            this.sourceNode = this.audioContext.createBufferSource();
-            this.gainNode = this.audioContext.createGain();
-            this.sourceNode.buffer = this.audioBuffer;
-            this.gainNode.gain.value = this.musicVolume;
-            this.sourceNode.connect(this.gainNode);
-            this.gainNode.connect(this.audioContext.destination);
+            // 曲の再生位置から拍の位置を計算
+            const elapsedBeats = (offset / 60.0) * this.detectedBPM;
+            const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
 
-            this.sourceNode.onended = () => {
-                this.isPlaying = false;
-                this.updatePlayButton();
-            };
+            // メトロノームの現在拍を調整
+            this.metronome.currentBeat = beatInBar;
+            this.metronome.totalBeats = Math.floor(elapsedBeats);
 
-            this.sourceNode.start(0, this.firstBeatOffset);
-            this.isPlaying = true;
-            this.startTime = this.audioContext.currentTime;
-            this.updatePlayButton();
+            console.log(`Metronome sync: offset=${offset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${this.metronome.totalBeats}`);
         }
+
+        console.log('========== playMusic END ==========');
     }
 
     stopMusic() {
         if (this.sourceNode) {
+            // 現在の再生位置を保存
+            const currentTime = this.audioContext.currentTime;
+            this.pausedAt = currentTime - this.startTime;
+
             this.sourceNode.stop();
             this.sourceNode = null;
         }
         this.isPlaying = false;
         this.updatePlayButton();
+        this.stopPlayheadUpdate();
 
         // メトロノームも停止
         if (this.syncWithMetronome && this.metronome.isPlaying) {
@@ -1547,11 +1607,104 @@ class MusicAnalyzer {
         this.audioBuffer = null;
         this.fileName = null;
         this.detectedBPM = null;
+        this.pausedAt = 0;
 
         // UI更新
         document.getElementById('uploadPlaceholder').style.display = 'flex';
         document.getElementById('musicInfo').style.display = 'none';
         document.getElementById('audioFileInput').value = '';
+    }
+
+    seekTo(ratio) {
+        // 波形上のクリック位置（0.0〜1.0）から秒数を計算
+        const duration = this.audioBuffer.duration;
+        const targetTime = ratio * duration;
+
+        console.log('========== seekTo START ==========');
+        console.log(`ratio=${ratio}, targetTime=${targetTime}秒`);
+        console.log(`wasPlaying=${this.isPlaying}`);
+        console.log(`sourceNode exists=${!!this.sourceNode}`);
+        console.log(`playheadUpdateInterval exists=${!!this.playheadUpdateInterval}`);
+        console.log(`metronome.isPlaying=${this.metronome.isPlaying}`);
+
+        const wasPlaying = this.isPlaying;
+
+        // 現在のソースを停止（エラーハンドリング付き）
+        if (this.sourceNode) {
+            try {
+                console.log('Stopping sourceNode...');
+                this.sourceNode.stop();
+                console.log('sourceNode stopped successfully');
+            } catch (e) {
+                console.log('sourceNode stop error:', e.message);
+            }
+            this.sourceNode = null;
+        }
+
+        // 再生線更新を停止
+        if (this.playheadUpdateInterval) {
+            console.log('Clearing playheadUpdateInterval...');
+            clearInterval(this.playheadUpdateInterval);
+            this.playheadUpdateInterval = null;
+        }
+
+        // シーク位置を設定
+        this.pausedAt = targetTime;
+        console.log(`pausedAt set to ${this.pausedAt}`);
+
+        // 再生中だった場合は再開
+        if (wasPlaying) {
+            console.log('Was playing, restarting playback...');
+            this.isPlaying = false; // playMusic内で再設定される
+            this.playMusic();
+        } else {
+            console.log('Was not playing, updating playhead only...');
+            // 停止中の場合は再生線だけ更新（表示する）
+            const playhead = document.getElementById('waveformPlayhead');
+            playhead.classList.add('playing');
+            this.updatePlayhead();
+            console.log('Playhead updated');
+        }
+
+        console.log('========== seekTo END ==========');
+    }
+
+    startPlayheadUpdate() {
+        const playhead = document.getElementById('waveformPlayhead');
+        playhead.classList.add('playing');
+
+        this.playheadUpdateInterval = setInterval(() => {
+            this.updatePlayhead();
+        }, 50); // 50msごとに更新
+    }
+
+    stopPlayheadUpdate() {
+        if (this.playheadUpdateInterval) {
+            clearInterval(this.playheadUpdateInterval);
+            this.playheadUpdateInterval = null;
+        }
+
+        const playhead = document.getElementById('waveformPlayhead');
+        playhead.classList.remove('playing');
+    }
+
+    updatePlayhead() {
+        const playhead = document.getElementById('waveformPlayhead');
+        const container = document.getElementById('waveformContainer');
+
+        if (!this.audioBuffer) return;
+
+        const currentTime = this.isPlaying
+            ? this.audioContext.currentTime - this.startTime
+            : this.pausedAt;
+
+        const duration = this.audioBuffer.duration;
+        const ratio = Math.min(1.0, Math.max(0, currentTime / duration));
+
+        const containerWidth = container.offsetWidth;
+        const left = ratio * containerWidth;
+
+        playhead.style.left = `${left}px`;
     }
 
     showMusicInfo() {
@@ -1615,25 +1768,52 @@ class MusicAnalyzer {
         ctx.fillStyle = isDarkMode ? '#2c2c2c' : '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
+        // 中央線を描画
+        ctx.strokeStyle = isDarkMode ? '#444' : '#ddd';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, height / 2);
+        ctx.lineTo(width, height / 2);
+        ctx.stroke();
+
         // 波形データを取得
         const channelData = this.audioBuffer.getChannelData(0);
         const step = Math.ceil(channelData.length / width);
         const amp = height / 2;
 
-        // 波形を描画
-        ctx.strokeStyle = isDarkMode ? '#4a90e2' : '#4a90e2';
-        ctx.lineWidth = 1;
+        // 波形を塗りつぶしで描画（より見やすく）
+        ctx.fillStyle = isDarkMode ? 'rgba(74, 144, 226, 0.7)' : 'rgba(74, 144, 226, 0.7)';
         ctx.beginPath();
+        ctx.moveTo(0, height / 2);
 
+        // 上側の波形
         for (let i = 0; i < width; i++) {
-            const min = channelData.slice(i * step, (i + 1) * step).reduce((a, b) => Math.min(a, b), 0);
-            const max = channelData.slice(i * step, (i + 1) * step).reduce((a, b) => Math.max(a, b), 0);
-
-            ctx.moveTo(i, (1 + min) * amp);
-            ctx.lineTo(i, (1 + max) * amp);
+            const slice = channelData.slice(i * step, (i + 1) * step);
+            let max = 0;
+            for (let j = 0; j < slice.length; j++) {
+                if (Math.abs(slice[j]) > Math.abs(max)) {
+                    max = slice[j];
+                }
+            }
+            const y = (1 - max) * amp;
+            ctx.lineTo(i, y);
         }
 
-        ctx.stroke();
+        // 下側の波形（逆順）
+        for (let i = width - 1; i >= 0; i--) {
+            const slice = channelData.slice(i * step, (i + 1) * step);
+            let min = 0;
+            for (let j = 0; j < slice.length; j++) {
+                if (Math.abs(slice[j]) > Math.abs(min) && slice[j] < 0) {
+                    min = slice[j];
+                }
+            }
+            const y = (1 - min) * amp;
+            ctx.lineTo(i, y);
+        }
+
+        ctx.closePath();
+        ctx.fill();
     }
 }
 
