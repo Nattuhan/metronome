@@ -596,7 +596,7 @@ export class MusicAnalyzer {
         let frameCount = 0;
 
         // フレームサイズとホップサイズを設定
-        const frameSize = 2048; // Meydaのデフォルト
+        const frameSize = 8192; // 大きくして低音域の解像度を向上
         const hopSize = frameSize / 2; // 50%オーバーラップ
 
         // 曲全体を解析
@@ -608,15 +608,12 @@ export class MusicAnalyzer {
             // フレームを抽出
             const frame = channelData.slice(i, i + frameSize);
 
-            // Meydaでクロマ特徴量を抽出
-            const chroma = Meyda.extract('chroma', frame);
+            // 自前でクロマグラムを計算（Meyda.jsが不正確なため）
+            const chroma = this.computeChroma(frame, sampleRate);
 
             if (chroma && chroma.length === 12) {
-                // 対数圧縮を適用してから合算
-                // γ = 10（100だと強すぎて特徴が平坦化）
-                const gamma = 10;
                 for (let j = 0; j < 12; j++) {
-                    chromaSum[j] += Math.log(1 + gamma * chroma[j]);
+                    chromaSum[j] += chroma[j];
                 }
                 frameCount++;
             }
@@ -637,6 +634,40 @@ export class MusicAnalyzer {
         console.log('========== キー検出終了 ==========');
 
         return detectedKey;
+    }
+
+    computeChroma(frame, sampleRate) {
+        // FFTベースのクロマグラム計算（最適化版）
+        const fftSize = frame.length;
+        const chroma = new Array(12).fill(0);
+        const A4_freq = 440.0;
+
+        // MIDI 28 (E1=41Hz) から MIDI 103 (G7=3136Hz) まで（人間の可聴範囲に絞る）
+        for (let midi = 28; midi <= 103; midi++) {
+            const freq = A4_freq * Math.pow(2, (midi - 69) / 12.0);
+            const binIndex = Math.round(freq * fftSize / sampleRate);
+
+            if (binIndex >= 0 && binIndex < fftSize / 2) {
+                // DFT計算（該当ビンのみ）
+                let real = 0;
+                let imag = 0;
+                const omega = -2 * Math.PI * binIndex / fftSize;
+
+                // 8サンプルごとにスキップして高速化（精度とのトレードオフ）
+                const step = 8;
+                for (let i = 0; i < fftSize; i += step) {
+                    const angle = omega * i;
+                    real += frame[i] * Math.cos(angle);
+                    imag += frame[i] * Math.sin(angle);
+                }
+
+                const magnitude = Math.sqrt(real * real + imag * imag);
+                const chromaIndex = midi % 12;
+                chroma[chromaIndex] += magnitude;
+            }
+        }
+
+        return chroma;
     }
 
     krumhanslSchmuckler(chroma) {
@@ -816,22 +847,22 @@ export class MusicAnalyzer {
 
     extractBeatChroma(channelData, startSample, beatSamples) {
         // 1拍分のクロマグラムを抽出（対数圧縮と正規化を適用）
-        const frameSize = 2048;
+        const frameSize = 8192; // 大きくして低音域の解像度を向上
         const hopSize = frameSize / 2;
         const chromaSum = new Array(12).fill(0);
         let frameCount = 0;
 
         // この拍の範囲でフレームごとにクロマを抽出
+        const sampleRate = this.audioBuffer.sampleRate;
         for (let i = startSample; i < startSample + beatSamples - frameSize; i += hopSize) {
             const frame = channelData.slice(i, i + frameSize);
-            const chroma = Meyda.extract('chroma', frame);
+
+            // 自前でクロマグラムを計算（Meyda.jsが不正確なため）
+            const chroma = this.computeChroma(frame, sampleRate);
 
             if (chroma && chroma.length === 12) {
-                // 対数圧縮: log(1 + γ * chroma)
-                // γ = 10（100だと強すぎて特徴が平坦化）
-                const gamma = 10;
                 for (let j = 0; j < 12; j++) {
-                    chromaSum[j] += Math.log(1 + gamma * chroma[j]);
+                    chromaSum[j] += chroma[j];
                 }
                 frameCount++;
             }
