@@ -1010,7 +1010,13 @@ export class MusicAnalyzer {
                 this.metronome.setTempo(adjustedBPM);
 
                 // 曲の再生位置から拍の位置を計算（メトロノーム拍オフセットを使用）
-                const elapsedBeats = Math.max(0, ((startOffset - this.metronomeBeatOffset) / 60.0) * adjustedBPM);
+                let elapsedBeats = ((startOffset - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
+
+                // 負の値の場合、beatsPerBarを加算して正の範囲に持ってくる
+                while (elapsedBeats < 0) {
+                    elapsedBeats += this.metronome.beatsPerBar;
+                }
+
                 const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
                 const totalBeats = Math.floor(elapsedBeats);
 
@@ -1102,7 +1108,13 @@ export class MusicAnalyzer {
             // メトロノームと同期している場合、拍位置を再計算
             if (this.syncWithMetronome && this.metronome.isPlaying) {
                 const adjustedBPM = this.detectedBPM * this.playbackRate;
-                const elapsedBeats = Math.max(0, ((targetTime - this.metronomeBeatOffset) / 60.0) * adjustedBPM);
+                let elapsedBeats = ((targetTime - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
+
+                // 負の値の場合、beatsPerBarを加算して正の範囲に持ってくる
+                while (elapsedBeats < 0) {
+                    elapsedBeats += this.metronome.beatsPerBar;
+                }
+
                 const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
                 const totalBeats = Math.floor(elapsedBeats);
 
