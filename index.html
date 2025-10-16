@@ -210,6 +210,10 @@
                                 <span class="info-label" data-i18n="detectedBPM">Detected BPM:</span>
                                 <span class="info-value" id="detectedBPM">-</span>
                             </div>
+                            <div class="music-info-item">
+                                <span class="info-label" data-i18n="detectedKey">Detected Key:</span>
+                                <span class="info-value" id="detectedKey">-</span>
+                            </div>
                             <div class="waveform-container" id="waveformContainer">
                                 <canvas id="waveformCanvas"></canvas>
                                 <div class="waveform-playhead" id="waveformPlayhead"></div>
@@ -265,6 +269,8 @@
         </footer>
     </div>
 
+    <!-- Meyda.js for audio feature extraction -->
+    <script src="https://unpkg.com/meyda@5.6.3/dist/web/meyda.min.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

@@ -22,6 +22,7 @@ export class MusicAnalyzer {
         this.isPlaying = false;
         this.fileName = null;
         this.detectedBPM = null;
+        this.detectedKey = null; // 検出されたキー（例: "C Major"）
         this.audioURL = null; // Blob URLを保存
         this.firstBeatOffset = 0; // 最初の音の開始位置（秒）
         this.playheadUpdateInterval = null; // 再生線更新用
@@ -271,6 +272,9 @@ export class MusicAnalyzer {
             // BPM検出と最初の音の位置検出
             this.detectedBPM = await this.detectBPM();
             this.firstBeatOffset = await this.detectFirstBeat();
+
+            // キー検出
+            this.detectedKey = await this.detectKey();
 
             // UI更新
             this.showMusicInfo();
@@ -571,6 +575,124 @@ export class MusicAnalyzer {
         return 0; // 見つからなければ0を返す
     }
 
+    async detectKey() {
+        // Meyda.jsを使用してクロマグラムを抽出し、Krumhansl-Schmucklerアルゴリズムでキーを検出
+        console.log('========== キー検出開始 ==========');
+
+        if (!window.Meyda) {
+            console.error('Meyda.js is not loaded');
+            return null;
+        }
+
+        const channelData = this.audioBuffer.getChannelData(0);
+        const sampleRate = this.audioBuffer.sampleRate;
+
+        // クロマグラムの集計用配列（12音階: C, C#, D, D#, E, F, F#, G, G#, A, A#, B）
+        const chromaSum = new Array(12).fill(0);
+        let frameCount = 0;
+
+        // フレームサイズとホップサイズを設定
+        const frameSize = 2048; // Meydaのデフォルト
+        const hopSize = frameSize / 2; // 50%オーバーラップ
+
+        // 最初の30秒を解析（長すぎると処理が重い）
+        const maxSamples = Math.min(channelData.length, sampleRate * 30);
+
+        // フレームごとにクロマグラムを抽出
+        for (let i = 0; i < maxSamples - frameSize; i += hopSize) {
+            // フレームを抽出
+            const frame = channelData.slice(i, i + frameSize);
+
+            // Meydaでクロマ特徴量を抽出
+            const chroma = Meyda.extract('chroma', frame);
+
+            if (chroma && chroma.length === 12) {
+                // 各音階のエネルギーを合算
+                for (let j = 0; j < 12; j++) {
+                    chromaSum[j] += chroma[j];
+                }
+                frameCount++;
+            }
+        }
+
+        // 平均クロマグラムを計算
+        const chromaAverage = chromaSum.map(sum => sum / frameCount);
+
+        console.log('平均クロマグラム:', chromaAverage.map((v, i) => {
+            const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            return `${notes[i]}: ${v.toFixed(3)}`;
+        }).join(', '));
+
+        // Krumhansl-Schmucklerアルゴリズムでキーを検出
+        const detectedKey = this.krumhanslSchmuckler(chromaAverage);
+
+        console.log(`✓ 検出キー: ${detectedKey}`);
+        console.log('========== キー検出終了 ==========');
+
+        return detectedKey;
+    }
+
+    krumhanslSchmuckler(chroma) {
+        // Krumhansl-Schmucklerのキープロファイル（メジャーとマイナー）
+        // 参考: https://rnhart.net/articles/key-finding/
+        const majorProfile = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88];
+        const minorProfile = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
+
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+        let bestKey = null;
+        let bestCorrelation = -Infinity;
+
+        // 12音階すべてでメジャー/マイナーをテスト
+        for (let shift = 0; shift < 12; shift++) {
+            // メジャーキーの相関を計算
+            const majorCorr = this.correlation(chroma, this.rotateArray(majorProfile, shift));
+            if (majorCorr > bestCorrelation) {
+                bestCorrelation = majorCorr;
+                bestKey = `${noteNames[shift]} Major`;
+            }
+
+            // マイナーキーの相関を計算
+            const minorCorr = this.correlation(chroma, this.rotateArray(minorProfile, shift));
+            if (minorCorr > bestCorrelation) {
+                bestCorrelation = minorCorr;
+                bestKey = `${noteNames[shift]} Minor`;
+            }
+        }
+
+        return bestKey;
+    }
+
+    rotateArray(arr, n) {
+        // 配列を右にn回転
+        const rotated = [];
+        for (let i = 0; i < arr.length; i++) {
+            rotated[i] = arr[(i - n + arr.length) % arr.length];
+        }
+        return rotated;
+    }
+
+    correlation(x, y) {
+        // ピアソン相関係数を計算
+        const n = x.length;
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+
+        for (let i = 0; i < n; i++) {
+            sumX += x[i];
+            sumY += y[i];
+            sumXY += x[i] * y[i];
+            sumX2 += x[i] * x[i];
+            sumY2 += y[i] * y[i];
+        }
+
+        const numerator = n * sumXY - sumX * sumY;
+        const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+        if (denominator === 0) return 0;
+
+        return numerator / denominator;
+    }
+
     togglePlayback() {
         if (this.isPlaying) {
             this.stopMusic();
@@ -801,6 +923,13 @@ export class MusicAnalyzer {
             document.getElementById('detectedBPM').textContent = `${bpmDisplay} BPM`;
         } else {
             document.getElementById('detectedBPM').textContent = '-';
+        }
+
+        // キー表示
+        if (this.detectedKey) {
+            document.getElementById('detectedKey').textContent = this.detectedKey;
+        } else {
+            document.getElementById('detectedKey').textContent = '-';
         }
     }
 
