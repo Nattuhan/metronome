@@ -63,6 +63,7 @@ export class LanguageManager {
                 syncWithMetronome: 'メトロノームと同期',
                 analyzing: '解析中...',
                 musicVolume: '曲の音量',
+                playbackRate: '再生速度',
                 countInEnabled: '再生前にカウントイン'
             },
             en: {
@@ -122,6 +123,7 @@ export class LanguageManager {
                 syncWithMetronome: 'Sync with metronome',
                 analyzing: 'Analyzing...',
                 musicVolume: 'Music Volume',
+                playbackRate: 'Playback Rate',
                 countInEnabled: 'Count-in before playback'
             }
         };

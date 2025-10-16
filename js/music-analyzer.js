@@ -11,10 +11,12 @@ export class MusicAnalyzer {
         const savedMusicVolume = localStorage.getItem('musicVolume');
         const savedSyncWithMetronome = localStorage.getItem('syncWithMetronome');
         const savedCountInEnabled = localStorage.getItem('countInEnabled');
+        const savedPlaybackRate = localStorage.getItem('playbackRate');
 
         this.musicVolume = savedMusicVolume !== null ? parseFloat(savedMusicVolume) : 0.7; // デフォルト70%
         this.syncWithMetronome = savedSyncWithMetronome !== null ? savedSyncWithMetronome === 'true' : true; // デフォルトON
         this.countInEnabled = savedCountInEnabled !== null ? savedCountInEnabled === 'true' : false; // デフォルトOFF
+        this.playbackRate = savedPlaybackRate !== null ? parseFloat(savedPlaybackRate) : 1.0; // デフォルト1.0倍
 
         this.isPlaying = false;
         this.fileName = null;
@@ -100,6 +102,16 @@ export class MusicAnalyzer {
             this.setMusicVolume(parseInt(e.target.value));
         });
 
+        // 再生速度スライダー
+        document.getElementById('playbackRateSlider').addEventListener('input', (e) => {
+            this.setPlaybackRate(parseFloat(e.target.value));
+        });
+
+        // 再生速度入力
+        document.getElementById('playbackRateInput').addEventListener('input', (e) => {
+            this.setPlaybackRate(parseFloat(e.target.value));
+        });
+
         // 波形ドラッグで範囲選択、クリックでジャンプ
         const waveformContainer = document.getElementById('waveformContainer');
 
@@ -177,12 +189,17 @@ export class MusicAnalyzer {
     loadSettings() {
         // 曲の音量スライダーとチェックボックスをUIに反映
         const musicVolumeSlider = document.getElementById('musicVolumeSlider');
+        const playbackRateSlider = document.getElementById('playbackRateSlider');
+        const playbackRateInput = document.getElementById('playbackRateInput');
         const syncCheckbox = document.getElementById('syncWithMetronome');
         const countInCheckbox = document.getElementById('countInEnabled');
 
         const volumePercent = Math.round(this.musicVolume * 100);
         musicVolumeSlider.value = volumePercent;
         document.getElementById('musicVolumeValue').textContent = volumePercent + '%';
+
+        playbackRateSlider.value = this.playbackRate;
+        playbackRateInput.value = this.playbackRate.toFixed(2);
 
         syncCheckbox.checked = this.syncWithMetronome;
         countInCheckbox.checked = this.countInEnabled;
@@ -196,6 +213,36 @@ export class MusicAnalyzer {
         // GainNodeが存在する場合、リアルタイムで音量を更新
         if (this.gainNode) {
             this.gainNode.gain.value = this.musicVolume;
+        }
+    }
+
+    setPlaybackRate(rate) {
+        // 範囲を0.1～2.0に制限
+        rate = Math.max(0.1, Math.min(2.0, rate));
+
+        // 1.0付近で吸着（±0.02の範囲）
+        if (Math.abs(rate - 1.0) < 0.02) {
+            rate = 1.0;
+        }
+
+        this.playbackRate = rate;
+
+        // UIを更新
+        document.getElementById('playbackRateSlider').value = rate;
+        document.getElementById('playbackRateInput').value = rate.toFixed(2);
+
+        // localStorageに保存
+        localStorage.setItem('playbackRate', this.playbackRate);
+
+        // SourceNodeが存在する場合、リアルタイムで再生速度を更新
+        if (this.sourceNode) {
+            this.sourceNode.playbackRate.value = this.playbackRate;
+        }
+
+        // メトロノームと同期している場合、テンポを更新
+        if (this.syncWithMetronome && this.detectedBPM) {
+            const adjustedBPM = this.detectedBPM * this.playbackRate;
+            this.metronome.setTempo(adjustedBPM);
         }
     }
 
@@ -528,10 +575,11 @@ export class MusicAnalyzer {
         this.sourceNode = this.audioContext.createBufferSource();
         this.gainNode = this.audioContext.createGain();
         this.sourceNode.buffer = this.audioBuffer;
+        this.sourceNode.playbackRate.value = this.playbackRate; // 再生速度を設定
         this.gainNode.gain.value = this.musicVolume;
         this.sourceNode.connect(this.gainNode);
         this.gainNode.connect(this.audioContext.destination);
-        console.log('New sourceNode created and connected');
+        console.log(`New sourceNode created and connected (playbackRate=${this.playbackRate})`);
 
         // 再生終了時の処理（このsourceNodeへの参照を保持）
         const currentSourceNode = this.sourceNode;
@@ -588,9 +636,16 @@ export class MusicAnalyzer {
                 console.log(`metronome.isPlaying after stop=${this.metronome.isPlaying}`);
             }
 
+            // 再生速度を考慮した調整BPMを計算
+            const adjustedBPM = this.detectedBPM * this.playbackRate;
+            console.log(`Adjusted BPM: ${this.detectedBPM} * ${this.playbackRate} = ${adjustedBPM}`);
+
+            // メトロノームのテンポを調整BPMに設定
+            this.metronome.setTempo(adjustedBPM);
+
             // 曲の再生位置から拍の位置を計算（メトロノーム開始前に計算）
             // offsetを使用（firstBeatOffsetまたはpausedAt）
-            const elapsedBeats = (offset / 60.0) * this.detectedBPM;
+            const elapsedBeats = (offset / 60.0) * adjustedBPM;
             const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
             const totalBeats = Math.floor(elapsedBeats);
 
