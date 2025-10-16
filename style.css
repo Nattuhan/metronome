@@ -1454,9 +1454,31 @@ body.light-mode .progress-text {
     display: block;
 }
 
+.waveform-selection {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(74, 144, 226, 0.3);
+    border-left: 2px solid #4a90e2;
+    border-right: 2px solid #4a90e2;
+    pointer-events: none;
+    z-index: 5;
+    display: none;
+}
+
+.waveform-selection.active {
+    display: block;
+}
+
 body.light-mode .waveform-container {
     background: #ffffff;
     border: 1px solid #ddd;
+}
+
+body.light-mode .waveform-selection {
+    background: rgba(74, 144, 226, 0.2);
+    border-left-color: #2c7fd4;
+    border-right-color: #2c7fd4;
 }
 
 /* 曲の音量コントロール */

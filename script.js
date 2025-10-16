@@ -1124,6 +1124,12 @@ class MusicAnalyzer {
         this.firstBeatOffset = 0; // 最初の音の開始位置（秒）
         this.playheadUpdateInterval = null; // 再生線更新用
 
+        // ループ範囲選択用
+        this.loopStart = null; // ループ開始位置（秒）
+        this.loopEnd = null; // ループ終了位置（秒）
+        this.isDragging = false; // ドラッグ中フラグ
+        this.dragStartX = 0; // ドラッグ開始X座標
+
         this.initEventListeners();
     }
 
@@ -1186,16 +1192,61 @@ class MusicAnalyzer {
             this.setMusicVolume(parseInt(e.target.value));
         });
 
-        // 波形クリックでジャンプ
+        // 波形ドラッグで範囲選択、クリックでジャンプ
         const waveformContainer = document.getElementById('waveformContainer');
-        waveformContainer.addEventListener('click', (e) => {
+
+        waveformContainer.addEventListener('mousedown', (e) => {
             if (!this.audioBuffer) return;
 
             const rect = waveformContainer.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
-            const ratio = clickX / rect.width;
 
-            this.seekTo(ratio);
+            this.isDragging = true;
+            this.dragStartX = clickX;
+        });
+
+        waveformContainer.addEventListener('mousemove', (e) => {
+            if (!this.isDragging || !this.audioBuffer) return;
+
+            const rect = waveformContainer.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+
+            // 選択範囲を表示
+            const startX = Math.min(this.dragStartX, currentX);
+            const endX = Math.max(this.dragStartX, currentX);
+
+            this.updateSelectionDisplay(startX, endX, rect.width);
+        });
+
+        waveformContainer.addEventListener('mouseup', (e) => {
+            if (!this.isDragging || !this.audioBuffer) return;
+
+            const rect = waveformContainer.getBoundingClientRect();
+            const endX = e.clientX - rect.left;
+            const duration = this.audioBuffer.duration;
+
+            // ドラッグ距離が短い場合はクリックと判定
+            if (Math.abs(endX - this.dragStartX) < 5) {
+                // クリック: シークする
+                const ratio = this.dragStartX / rect.width;
+                this.seekTo(ratio);
+                this.clearSelection();
+            } else {
+                // ドラッグ: ループ範囲を設定
+                const startRatio = Math.min(this.dragStartX, endX) / rect.width;
+                const endRatio = Math.max(this.dragStartX, endX) / rect.width;
+
+                this.loopStart = startRatio * duration;
+                this.loopEnd = endRatio * duration;
+
+                console.log(`Loop range set: ${this.loopStart.toFixed(2)}s - ${this.loopEnd.toFixed(2)}s`);
+            }
+
+            this.isDragging = false;
+        });
+
+        waveformContainer.addEventListener('mouseleave', () => {
+            this.isDragging = false;
         });
     }
 
@@ -1702,6 +1753,9 @@ class MusicAnalyzer {
         const left = ratio * containerWidth;
 
         playhead.style.left = `${left}px`;
+
+        // ループ範囲のチェック
+        this.checkLoop();
     }
 
     showMusicInfo() {
@@ -1810,6 +1864,38 @@ class MusicAnalyzer {
         }
 
         ctx.stroke();
+    }
+
+    // 選択範囲の表示を更新
+    updateSelectionDisplay(startX, endX, containerWidth) {
+        const selection = document.getElementById('waveformSelection');
+        const left = startX;
+        const width = endX - startX;
+
+        selection.style.left = `${left}px`;
+        selection.style.width = `${width}px`;
+        selection.classList.add('active');
+    }
+
+    // 選択範囲をクリア
+    clearSelection() {
+        const selection = document.getElementById('waveformSelection');
+        selection.classList.remove('active');
+        this.loopStart = null;
+        this.loopEnd = null;
+    }
+
+    // ループ再生のチェック（updatePlayheadで呼ぶ）
+    checkLoop() {
+        if (!this.isPlaying || this.loopStart === null || this.loopEnd === null) return;
+
+        const currentTime = this.audioContext.currentTime - this.startTime;
+
+        // ループ終了位置を超えた場合、ループ開始位置に戻る
+        if (currentTime >= this.loopEnd) {
+            console.log(`Loop: ${currentTime.toFixed(2)}s >= ${this.loopEnd.toFixed(2)}s, jumping to ${this.loopStart.toFixed(2)}s`);
+            this.seekTo(this.loopStart / this.audioBuffer.duration);
+        }
     }
 }
 
