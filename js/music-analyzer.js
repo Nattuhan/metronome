@@ -503,27 +503,15 @@ export class MusicAnalyzer {
             this.sourceNode = null;
         }
 
-        // メトロノームと同期する場合、firstBeatOffsetではなく0から再生
-        // これにより無音時間が長い場合でも1拍目がずれない
-        let offset;
-        if (this.pausedAt > 0) {
-            // シーク位置がある場合はそれを使用
-            offset = this.pausedAt;
-        } else if (this.syncWithMetronome) {
-            // メトロノーム同期時は0から再生（無音時間を無視）
-            offset = 0;
-        } else {
-            // 同期しない場合は最初の音から再生
-            offset = this.firstBeatOffset;
-        }
-
+        // 無音時間をスキップして再生開始
+        let offset = this.pausedAt || this.firstBeatOffset;
         console.log(`offset=${offset}秒, audioBuffer.duration=${this.audioBuffer.duration}秒`);
 
         // offsetが曲の長さを超えていないかチェック
         if (offset >= this.audioBuffer.duration) {
             console.log('ERROR: offset exceeds duration, resetting to 0');
             this.pausedAt = 0;
-            offset = 0;
+            offset = this.firstBeatOffset;
         }
 
         // ループ範囲が設定されている場合、ループ範囲の長さを計算して再生時間を制限
@@ -606,14 +594,16 @@ export class MusicAnalyzer {
             console.log(`metronome.isPlaying after start=${this.metronome.isPlaying}`);
 
             // 曲の再生位置から拍の位置を計算
-            const elapsedBeats = (offset / 60.0) * this.detectedBPM;
+            // pausedAt（シーク位置）がある場合はそれを使用、そうでない場合は0から開始
+            const timeForBeatCalculation = this.pausedAt > 0 ? this.pausedAt : 0;
+            const elapsedBeats = (timeForBeatCalculation / 60.0) * this.detectedBPM;
             const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
 
             // メトロノームの現在拍を調整
             this.metronome.currentBeat = beatInBar;
             this.metronome.totalBeats = Math.floor(elapsedBeats);
 
-            console.log(`Metronome sync: offset=${offset}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${this.metronome.totalBeats}`);
+            console.log(`Metronome sync: offset=${offset}秒, timeForBeatCalculation=${timeForBeatCalculation}秒, elapsedBeats=${elapsedBeats}, currentBeat=${beatInBar}, totalBeats=${this.metronome.totalBeats}`);
         }
 
         console.log('========== playMusic END ==========');
