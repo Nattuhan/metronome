@@ -44,6 +44,31 @@ A simple yet feature-rich web metronome app. Runs in your browser and is complet
 - **Multilingual**: Japanese and English support
 - **Settings Persistence**: Your settings are automatically saved
 
+### 🚀 Running Locally
+
+This app uses ES6 modules, so you need an HTTP server to run it locally.
+
+#### Method 1: Using Python (Recommended)
+```bash
+# If you have Python 3 installed
+cd metronome
+python -m http.server 8000
+
+# Open http://localhost:8000 in your browser
+```
+
+#### Method 2: Using Node.js
+```bash
+# Use npx (included with Node.js 5.2.0+)
+cd metronome
+npx http-server -p 8000
+
+# Open http://localhost:8000 in your browser
+```
+
+#### Method 3: VS Code Extension
+Use extensions like Live Server: right-click → "Open with Live Server"
+
 ### 🎹 Usage
 
 #### Basic Controls
@@ -149,6 +174,31 @@ Created with Claude Code by Anthropic
 - **ダーク/ライトモード**: テーマの切り替え
 - **多言語対応**: 日本語・英語対応
 - **設定の保存**: 設定が自動的に保存されます
+
+### 🚀 ローカルでの実行方法
+
+このアプリはES6モジュールを使用しているため、ローカルで実行する際はHTTPサーバーが必要です。
+
+#### 方法1: Pythonを使う（推奨）
+```bash
+# Python 3がインストールされている場合
+cd metronome
+python -m http.server 8000
+
+# ブラウザで http://localhost:8000 を開く
+```
+
+#### 方法2: Node.jsを使う
+```bash
+# npx (Node.js 5.2.0以降に含まれる) を使用
+cd metronome
+npx http-server -p 8000
+
+# ブラウザで http://localhost:8000 を開く
+```
+
+#### 方法3: VS Codeの拡張機能
+Live Serverなどの拡張機能を使用して、右クリック→「Open with Live Server」
 
 ### 🎹 使い方
 

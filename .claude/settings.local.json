@@ -4,7 +4,8 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nスマホビューでメインコンテンツの幅を修正\n\n振り子表示から設定リセットボタンまでのエリアが\nスマホで右余白が多くなっていた問題を修正。\n.main-contentに明示的にwidth: 100%を設定。\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git push)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
