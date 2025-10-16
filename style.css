@@ -1418,3 +1418,52 @@ body.light-mode .progress-text {
     color: #666;
 }
 
+/* 波形表示 */
+.waveform-container {
+    width: 100%;
+    height: 80px;
+    background: #2c2c2c;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.waveform-container canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+body.light-mode .waveform-container {
+    background: #ffffff;
+    border: 1px solid #ddd;
+}
+
+/* 曲の音量コントロール */
+.music-volume-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.music-volume-control label {
+    font-size: 0.9rem;
+    color: #ccc;
+    white-space: nowrap;
+}
+
+#musicVolumeValue {
+    font-weight: 600;
+    color: #ccc;
+    min-width: 40px;
+}
+
+body.light-mode .music-volume-control label {
+    color: #666;
+}
+
+body.light-mode #musicVolumeValue {
+    color: #555;
+}
+

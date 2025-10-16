@@ -203,9 +203,17 @@
                                 <span class="info-label" data-i18n="detectedBPM">Detected BPM:</span>
                                 <span class="info-value" id="detectedBPM">-</span>
                             </div>
+                            <div class="waveform-container">
+                                <canvas id="waveformCanvas"></canvas>
+                            </div>
                             <div class="music-controls">
                                 <button id="playMusicBtn" class="btn-music-control" data-i18n="playMusic">▶ Play</button>
                                 <button id="removeMusicBtn" class="btn-music-remove" data-i18n="removeMusic">× Remove</button>
+                            </div>
+                            <div class="music-volume-control">
+                                <label for="musicVolumeSlider" data-i18n="musicVolume">Music Volume</label>
+                                <input type="range" id="musicVolumeSlider" min="0" max="100" value="70" step="1" class="slider">
+                                <span id="musicVolumeValue">70%</span>
                             </div>
                             <div class="sync-controls">
                                 <label class="checkbox-label">

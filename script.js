@@ -985,7 +985,8 @@ class LanguageManager {
                 stopMusic: '■ 停止',
                 removeMusic: '× 削除',
                 syncWithMetronome: 'メトロノームと同期',
-                analyzing: '解析中...'
+                analyzing: '解析中...',
+                musicVolume: '曲の音量'
             },
             en: {
                 title: 'Metronome',
@@ -1041,7 +1042,8 @@ class LanguageManager {
                 stopMusic: '■ Stop',
                 removeMusic: '× Remove',
                 syncWithMetronome: 'Sync with metronome',
-                analyzing: 'Analyzing...'
+                analyzing: 'Analyzing...',
+                musicVolume: 'Music Volume'
             }
         };
 
@@ -1111,6 +1113,8 @@ class MusicAnalyzer {
         this.audioContext = metronome.audioContext;
         this.audioBuffer = null;
         this.sourceNode = null;
+        this.gainNode = null; // 音量調整用
+        this.musicVolume = 0.7; // デフォルト音量70%
         this.isPlaying = false;
         this.fileName = null;
         this.detectedBPM = null;
@@ -1174,6 +1178,21 @@ class MusicAnalyzer {
         document.getElementById('syncWithMetronome').addEventListener('change', (e) => {
             this.syncWithMetronome = e.target.checked;
         });
+
+        // 曲の音量スライダー
+        document.getElementById('musicVolumeSlider').addEventListener('input', (e) => {
+            this.setMusicVolume(parseInt(e.target.value));
+        });
+    }
+
+    setMusicVolume(vol) {
+        this.musicVolume = vol / 100;
+        document.getElementById('musicVolumeValue').textContent = vol + '%';
+
+        // GainNodeが存在する場合、リアルタイムで音量を更新
+        if (this.gainNode) {
+            this.gainNode.gain.value = this.musicVolume;
+        }
     }
 
     async loadAudioFile(file) {
@@ -1195,6 +1214,7 @@ class MusicAnalyzer {
 
             // UI更新
             this.showMusicInfo();
+            this.drawWaveform(); // 波形を描画
             this.showProgress(false);
 
             // 検出されたBPMをメトロノームに反映
@@ -1458,10 +1478,13 @@ class MusicAnalyzer {
 
         // メトロノームと同期する場合
         if (this.syncWithMetronome && !this.metronome.isPlaying) {
-            // 新しいソースノードを作成
+            // 新しいソースノードとGainNodeを作成
             this.sourceNode = this.audioContext.createBufferSource();
+            this.gainNode = this.audioContext.createGain();
             this.sourceNode.buffer = this.audioBuffer;
-            this.sourceNode.connect(this.audioContext.destination);
+            this.gainNode.gain.value = this.musicVolume;
+            this.sourceNode.connect(this.gainNode);
+            this.gainNode.connect(this.audioContext.destination);
 
             // 再生終了時の処理
             this.sourceNode.onended = () => {
@@ -1487,8 +1510,11 @@ class MusicAnalyzer {
         } else {
             // 同期なしの場合は即座に再生（オフセット適用）
             this.sourceNode = this.audioContext.createBufferSource();
+            this.gainNode = this.audioContext.createGain();
             this.sourceNode.buffer = this.audioBuffer;
-            this.sourceNode.connect(this.audioContext.destination);
+            this.gainNode.gain.value = this.musicVolume;
+            this.sourceNode.connect(this.gainNode);
+            this.gainNode.connect(this.audioContext.destination);
 
             this.sourceNode.onended = () => {
                 this.isPlaying = false;
@@ -1570,6 +1596,44 @@ class MusicAnalyzer {
             btn.classList.remove('playing');
             btn.textContent = lang === 'ja' ? '▶ 再生' : '▶ Play';
         }
+    }
+
+    drawWaveform() {
+        const canvas = document.getElementById('waveformCanvas');
+        if (!canvas || !this.audioBuffer) return;
+
+        const ctx = canvas.getContext('2d');
+        const width = canvas.offsetWidth;
+        const height = canvas.offsetHeight;
+
+        // Canvas解像度を設定
+        canvas.width = width;
+        canvas.height = height;
+
+        // 背景をクリア
+        const isDarkMode = !document.body.classList.contains('light-mode');
+        ctx.fillStyle = isDarkMode ? '#2c2c2c' : '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+
+        // 波形データを取得
+        const channelData = this.audioBuffer.getChannelData(0);
+        const step = Math.ceil(channelData.length / width);
+        const amp = height / 2;
+
+        // 波形を描画
+        ctx.strokeStyle = isDarkMode ? '#4a90e2' : '#4a90e2';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+
+        for (let i = 0; i < width; i++) {
+            const min = channelData.slice(i * step, (i + 1) * step).reduce((a, b) => Math.min(a, b), 0);
+            const max = channelData.slice(i * step, (i + 1) * step).reduce((a, b) => Math.max(a, b), 0);
+
+            ctx.moveTo(i, (1 + min) * amp);
+            ctx.lineTo(i, (1 + max) * amp);
+        }
+
+        ctx.stroke();
     }
 }
 
