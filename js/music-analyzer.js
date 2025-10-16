@@ -613,7 +613,8 @@ export class MusicAnalyzer {
 
             if (chroma && chroma.length === 12) {
                 // 対数圧縮を適用してから合算
-                const gamma = 100;
+                // γ = 10（100だと強すぎて特徴が平坦化）
+                const gamma = 10;
                 for (let j = 0; j < 12; j++) {
                     chromaSum[j] += Math.log(1 + gamma * chroma[j]);
                 }
@@ -827,8 +828,8 @@ export class MusicAnalyzer {
 
             if (chroma && chroma.length === 12) {
                 // 対数圧縮: log(1 + γ * chroma)
-                // γ = 100（研究論文で推奨される値）
-                const gamma = 100;
+                // γ = 10（100だと強すぎて特徴が平坦化）
+                const gamma = 10;
                 for (let j = 0; j < 12; j++) {
                     chromaSum[j] += Math.log(1 + gamma * chroma[j]);
                 }
