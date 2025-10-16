@@ -6,11 +6,19 @@ export class MusicAnalyzer {
         this.audioBuffer = null;
         this.sourceNode = null;
         this.gainNode = null; // 音量調整用
-        this.musicVolume = 0.7; // デフォルト音量70%
+
+        // 保存された設定を読み込み
+        const savedMusicVolume = localStorage.getItem('musicVolume');
+        const savedSyncWithMetronome = localStorage.getItem('syncWithMetronome');
+        const savedCountInEnabled = localStorage.getItem('countInEnabled');
+
+        this.musicVolume = savedMusicVolume !== null ? parseFloat(savedMusicVolume) : 0.7; // デフォルト70%
+        this.syncWithMetronome = savedSyncWithMetronome !== null ? savedSyncWithMetronome === 'true' : true; // デフォルトON
+        this.countInEnabled = savedCountInEnabled !== null ? savedCountInEnabled === 'true' : false; // デフォルトOFF
+
         this.isPlaying = false;
         this.fileName = null;
         this.detectedBPM = null;
-        this.syncWithMetronome = true; // デフォルトでオン
         this.startTime = 0;
         this.pausedAt = 0; // 一時停止した位置（秒）
         this.firstBeatOffset = 0; // 最初の音の開始位置（秒）
@@ -23,6 +31,7 @@ export class MusicAnalyzer {
         this.dragStartX = 0; // ドラッグ開始X座標
 
         this.initEventListeners();
+        this.loadSettings(); // UIに設定を反映
     }
 
     initEventListeners() {
@@ -77,6 +86,13 @@ export class MusicAnalyzer {
         // 同期チェックボックス
         document.getElementById('syncWithMetronome').addEventListener('change', (e) => {
             this.syncWithMetronome = e.target.checked;
+            localStorage.setItem('syncWithMetronome', this.syncWithMetronome);
+        });
+
+        // カウントインチェックボックス
+        document.getElementById('countInEnabled').addEventListener('change', (e) => {
+            this.countInEnabled = e.target.checked;
+            localStorage.setItem('countInEnabled', this.countInEnabled);
         });
 
         // 曲の音量スライダー
@@ -158,9 +174,24 @@ export class MusicAnalyzer {
         });
     }
 
+    loadSettings() {
+        // 曲の音量スライダーとチェックボックスをUIに反映
+        const musicVolumeSlider = document.getElementById('musicVolumeSlider');
+        const syncCheckbox = document.getElementById('syncWithMetronome');
+        const countInCheckbox = document.getElementById('countInEnabled');
+
+        const volumePercent = Math.round(this.musicVolume * 100);
+        musicVolumeSlider.value = volumePercent;
+        document.getElementById('musicVolumeValue').textContent = volumePercent + '%';
+
+        syncCheckbox.checked = this.syncWithMetronome;
+        countInCheckbox.checked = this.countInEnabled;
+    }
+
     setMusicVolume(vol) {
         this.musicVolume = vol / 100;
         document.getElementById('musicVolumeValue').textContent = vol + '%';
+        localStorage.setItem('musicVolume', this.musicVolume);
 
         // GainNodeが存在する場合、リアルタイムで音量を更新
         if (this.gainNode) {
@@ -446,10 +477,18 @@ export class MusicAnalyzer {
         console.log(`pausedAt=${this.pausedAt}`);
         console.log(`firstBeatOffset=${this.firstBeatOffset}`);
         console.log(`loopStart=${this.loopStart}, loopEnd=${this.loopEnd}`);
+        console.log(`countInEnabled=${this.countInEnabled}`);
 
         if (!this.audioBuffer) {
             console.log('No audioBuffer, returning');
             return;
+        }
+
+        // カウントインが有効で、かつ停止中から再生開始する場合のみカウントインを実行
+        if (this.countInEnabled && this.pausedAt === 0 && this.syncWithMetronome) {
+            console.log('Executing count-in...');
+            this.executeCountIn();
+            return; // カウントイン後に自動的にplayMusicが再度呼ばれる
         }
 
         // 既存のソースがあれば停止してonendedをクリア
@@ -464,14 +503,27 @@ export class MusicAnalyzer {
             this.sourceNode = null;
         }
 
-        let offset = this.pausedAt || this.firstBeatOffset;
+        // メトロノームと同期する場合、firstBeatOffsetではなく0から再生
+        // これにより無音時間が長い場合でも1拍目がずれない
+        let offset;
+        if (this.pausedAt > 0) {
+            // シーク位置がある場合はそれを使用
+            offset = this.pausedAt;
+        } else if (this.syncWithMetronome) {
+            // メトロノーム同期時は0から再生（無音時間を無視）
+            offset = 0;
+        } else {
+            // 同期しない場合は最初の音から再生
+            offset = this.firstBeatOffset;
+        }
+
         console.log(`offset=${offset}秒, audioBuffer.duration=${this.audioBuffer.duration}秒`);
 
         // offsetが曲の長さを超えていないかチェック
         if (offset >= this.audioBuffer.duration) {
             console.log('ERROR: offset exceeds duration, resetting to 0');
             this.pausedAt = 0;
-            offset = this.firstBeatOffset;
+            offset = 0;
         }
 
         // ループ範囲が設定されている場合、ループ範囲の長さを計算して再生時間を制限
@@ -829,5 +881,30 @@ export class MusicAnalyzer {
             console.log(`Loop: ${currentTime.toFixed(2)}s >= ${this.loopEnd.toFixed(2)}s, jumping to ${this.loopStart.toFixed(2)}s`);
             this.seekTo(this.loopStart / this.audioBuffer.duration);
         }
+    }
+
+    // カウントイン実行
+    executeCountIn() {
+        const beatsPerBar = this.metronome.beatsPerBar;
+        const tempo = this.detectedBPM || this.metronome.tempo;
+        const beatDuration = 60.0 / tempo; // 1拍の長さ（秒）
+
+        console.log(`Count-in: ${beatsPerBar} beats at ${tempo} BPM (${beatDuration}s per beat)`);
+
+        // メトロノームを一時的に開始（カウントインのため）
+        if (!this.metronome.isPlaying) {
+            this.metronome.start();
+        }
+
+        // カウントイン終了後に曲を再生
+        const totalCountInDuration = beatDuration * beatsPerBar * 1000; // ミリ秒
+        setTimeout(() => {
+            console.log('Count-in finished, starting music...');
+            // countInEnabledを一時的にfalseにして再帰を防ぐ
+            const originalCountInEnabled = this.countInEnabled;
+            this.countInEnabled = false;
+            this.playMusic();
+            this.countInEnabled = originalCountInEnabled;
+        }, totalCountInDuration);
     }
 }

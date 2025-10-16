@@ -61,7 +61,8 @@ export class LanguageManager {
                 removeMusic: '× 削除',
                 syncWithMetronome: 'メトロノームと同期',
                 analyzing: '解析中...',
-                musicVolume: '曲の音量'
+                musicVolume: '曲の音量',
+                countInEnabled: '再生前にカウントイン'
             },
             en: {
                 title: 'Metronome',
@@ -118,7 +119,8 @@ export class LanguageManager {
                 removeMusic: '× Remove',
                 syncWithMetronome: 'Sync with metronome',
                 analyzing: 'Analyzing...',
-                musicVolume: 'Music Volume'
+                musicVolume: 'Music Volume',
+                countInEnabled: 'Count-in before playback'
             }
         };
 
