@@ -255,8 +255,8 @@ export class MusicAnalyzer {
 
     shiftBeatOffset() {
         // 拍位置を半拍ずらす
-        if (!this.detectedBPM) {
-            console.log('BPM not detected, cannot shift beat');
+        if (!this.detectedBPM || !this.audioElement) {
+            console.log('BPM not detected or no audio loaded, cannot shift beat');
             return;
         }
 
@@ -268,7 +268,7 @@ export class MusicAnalyzer {
 
         console.log(`拍位置を半拍シフト: ${halfBeatDuration.toFixed(3)}秒, 新しいオフセット: ${this.firstBeatOffset.toFixed(3)}秒`);
 
-        // メトロノームが再生中の場合、同期を再調整
+        // 再生中の場合、同期を再調整
         if (this.isPlaying && this.syncWithMetronome && this.metronome.isPlaying) {
             const currentTime = this.audioElement.currentTime;
             const adjustedBPM = this.detectedBPM * this.playbackRate;
@@ -281,6 +281,10 @@ export class MusicAnalyzer {
             this.metronome.currentBeat = beatInBar;
             this.metronome.totalBeats = totalBeats;
             this.metronome.updateVisuals(0);
+        } else {
+            // 再生中でない場合は、currentTimeを0にリセット（次回再生時に最初から）
+            this.audioElement.currentTime = 0;
+            console.log('再生位置を0にリセット（次回再生時は最初から）');
         }
     }
 
