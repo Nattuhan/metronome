@@ -392,6 +392,16 @@ export class MusicAnalyzer {
     }
 
     createAudioElement() {
+        // 既存のノードを切断
+        if (this.sourceNode) {
+            this.sourceNode.disconnect();
+            this.sourceNode = null;
+        }
+        if (this.gainNode) {
+            this.gainNode.disconnect();
+            this.gainNode = null;
+        }
+
         // 既存の<audio>要素があれば削除
         if (this.audioElement) {
             this.audioElement.pause();
@@ -427,13 +437,6 @@ export class MusicAnalyzer {
         });
 
         // MediaElementAudioSourceNodeとGainNodeを作成
-        if (this.sourceNode) {
-            this.sourceNode.disconnect();
-        }
-        if (this.gainNode) {
-            this.gainNode.disconnect();
-        }
-
         this.sourceNode = this.audioContext.createMediaElementSource(this.audioElement);
         this.gainNode = this.audioContext.createGain();
         this.gainNode.gain.value = this.musicVolume;
