@@ -23,6 +23,7 @@ export class MusicAnalyzer {
         this.fileName = null;
         this.detectedBPM = null;
         this.detectedKey = null; // 検出されたキー（例: "C Major"）
+        this.chordProgression = []; // コード進行データ: [{ bar, beat, chord }, ...]
         this.audioURL = null; // Blob URLを保存
         this.firstBeatOffset = 0; // 最初の音の開始位置（秒）
         this.playheadUpdateInterval = null; // 再生線更新用
@@ -275,6 +276,9 @@ export class MusicAnalyzer {
 
             // キー検出
             this.detectedKey = await this.detectKey();
+
+            // コード進行検出
+            this.chordProgression = await this.detectChordProgression();
 
             // UI更新
             this.showMusicInfo();
@@ -595,8 +599,9 @@ export class MusicAnalyzer {
         const frameSize = 2048; // Meydaのデフォルト
         const hopSize = frameSize / 2; // 50%オーバーラップ
 
-        // 最初の30秒を解析（長すぎると処理が重い）
-        const maxSamples = Math.min(channelData.length, sampleRate * 30);
+        // 曲全体を解析
+        const maxSamples = channelData.length;
+        console.log(`キー検出: 曲全体 (${(maxSamples / sampleRate).toFixed(1)}秒) を解析中...`);
 
         // フレームごとにクロマグラムを抽出
         for (let i = 0; i < maxSamples - frameSize; i += hopSize) {
@@ -691,6 +696,156 @@ export class MusicAnalyzer {
         if (denominator === 0) return 0;
 
         return numerator / denominator;
+    }
+
+    getChordTemplates() {
+        // 和音テンプレート（よく使われるコードのみ）
+        // 0=C, 1=C#, 2=D, 3=D#, 4=E, 5=F, 6=F#, 7=G, 8=G#, 9=A, 10=A#, 11=B
+        return {
+            // メジャー系
+            '': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],         // Major (C, E, G) → C
+            'M7': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],       // Major 7th (C, E, G, B) → CM7
+            '7': [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],        // Dominant 7th (C, E, G, Bb) → C7
+            'sus4': [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0],     // sus4 (C, F, G) → Csus4
+            'add9': [1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],     // add9 (C, D, E, G) → Cadd9
+
+            // マイナー系
+            'm': [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],        // Minor (C, Eb, G) → Cm
+            'm7': [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],       // Minor 7th (C, Eb, G, Bb) → Cm7
+
+            // その他
+            'dim': [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0]       // Diminished (C, Eb, Gb) → Cdim
+        };
+    }
+
+    async detectChordProgression() {
+        // 小節ごとにコードを検出（曲全体を解析）
+        console.log('========== コード進行検出開始 ==========');
+
+        if (!window.Meyda || !this.detectedBPM) {
+            console.error('Meyda.js not loaded or BPM not detected');
+            return [];
+        }
+
+        const channelData = this.audioBuffer.getChannelData(0);
+        const sampleRate = this.audioBuffer.sampleRate;
+        const beatsPerBar = this.metronome.beatsPerBar;
+
+        // 1拍の長さ（秒）
+        const beatDuration = 60.0 / this.detectedBPM;
+        const beatSamples = Math.floor(beatDuration * sampleRate);
+        // 1小節の長さ
+        const barSamples = beatSamples * beatsPerBar;
+
+        console.log(`BPM: ${this.detectedBPM}, 拍子: ${beatsPerBar}/4, 1拍の長さ: ${beatDuration.toFixed(3)}秒`);
+
+        const chordProgression = [];
+
+        // 最初の音の位置から開始
+        const startSample = Math.floor(this.firstBeatOffset * sampleRate);
+
+        // 曲全体を解析
+        const maxSamples = channelData.length;
+        const duration = (maxSamples - startSample) / sampleRate;
+        console.log(`コード進行検出: 曲全体 (${duration.toFixed(1)}秒) を解析中...`);
+
+        let currentBar = 1;
+        let lastChord = null;
+        let lastChordCount = 0; // 連続して同じコードが何回続いているか
+
+        // 小節ごとにクロマグラムを抽出してコード判定
+        for (let samplePos = startSample; samplePos < maxSamples - barSamples; samplePos += barSamples) {
+            // この小節の範囲のクロマグラムを計算
+            const barChroma = this.extractBeatChroma(channelData, samplePos, barSamples);
+
+            if (barChroma) {
+                // コード判定
+                const chord = this.detectChordFromChroma(barChroma);
+
+                // 前の小節と異なるコード、または最初の小節の場合は記録
+                if (chord !== lastChord) {
+                    chordProgression.push({
+                        bar: currentBar,
+                        beat: 1, // 小節の開始位置
+                        chord: chord,
+                        time: (samplePos - startSample) / sampleRate
+                    });
+                    lastChord = chord;
+                    lastChordCount = 1;
+                } else {
+                    lastChordCount++;
+                }
+            }
+
+            currentBar++;
+        }
+
+        console.log(`✓ 検出されたコード進行: ${chordProgression.length}個のコードチェンジ`);
+        console.log('コード進行サンプル:', chordProgression.slice(0, 20).map(c =>
+            `${c.bar}:${c.beat} ${c.chord}`
+        ).join(' -> '));
+        console.log('========== コード進行検出終了 ==========');
+
+        return chordProgression;
+    }
+
+    extractBeatChroma(channelData, startSample, beatSamples) {
+        // 1拍分のクロマグラムを抽出
+        const frameSize = 2048;
+        const hopSize = frameSize / 2;
+        const chromaSum = new Array(12).fill(0);
+        let frameCount = 0;
+
+        // この拍の範囲でフレームごとにクロマを抽出
+        for (let i = startSample; i < startSample + beatSamples - frameSize; i += hopSize) {
+            const frame = channelData.slice(i, i + frameSize);
+            const chroma = Meyda.extract('chroma', frame);
+
+            if (chroma && chroma.length === 12) {
+                for (let j = 0; j < 12; j++) {
+                    chromaSum[j] += chroma[j];
+                }
+                frameCount++;
+            }
+        }
+
+        if (frameCount === 0) return null;
+
+        // 平均クロマグラムを返す
+        return chromaSum.map(sum => sum / frameCount);
+    }
+
+    detectChordFromChroma(chroma) {
+        // クロマグラムから最適なコードを検出
+        const templates = this.getChordTemplates();
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+        let bestChord = 'N.C.';
+        let bestScore = -Infinity;
+
+        // 12音階すべてでテンプレートマッチング
+        for (let root = 0; root < 12; root++) {
+            for (const [chordType, template] of Object.entries(templates)) {
+                // テンプレートをroot音に合わせて回転
+                const rotatedTemplate = this.rotateArray(template, root);
+
+                // クロマグラムとテンプレートの相関を計算
+                const score = this.correlation(chroma, rotatedTemplate);
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestChord = `${noteNames[root]}${chordType}`;
+                }
+            }
+        }
+
+        // スコアが低すぎる場合はN.C.（ノーコード）
+        // 閾値を0.5に引き上げてノイズを抑制
+        if (bestScore < 0.5) {
+            return 'N.C.';
+        }
+
+        return bestChord;
     }
 
     togglePlayback() {
@@ -903,6 +1058,9 @@ export class MusicAnalyzer {
 
         // ループ範囲のチェック
         this.checkLoop();
+
+        // コード進行のハイライト更新
+        this.updateChordProgressionHighlight();
     }
 
     showMusicInfo() {
@@ -930,6 +1088,88 @@ export class MusicAnalyzer {
             document.getElementById('detectedKey').textContent = this.detectedKey;
         } else {
             document.getElementById('detectedKey').textContent = '-';
+        }
+
+        // コード進行表示
+        if (this.chordProgression && this.chordProgression.length > 0) {
+            this.renderChordProgression();
+        }
+    }
+
+    renderChordProgression() {
+        // コード進行UIを描画（全小節分）
+        const display = document.getElementById('chordProgressionDisplay');
+        display.classList.add('active');
+
+        // 全小節数を計算（曲の長さから）
+        const duration = this.audioBuffer.duration;
+        const beatDuration = 60.0 / this.detectedBPM;
+        const beatsPerBar = this.metronome.beatsPerBar;
+        const totalBars = Math.ceil((duration - this.firstBeatOffset) / (beatDuration * beatsPerBar));
+
+        // HTMLを構築（最大60小節まで）
+        const maxBars = Math.min(totalBars, 60);
+        let html = '<div class="chord-bars-container">';
+
+        for (let bar = 1; bar <= maxBars; bar++) {
+            const chord = this.getChordAtBeat(bar, 1);
+            html += `<div class="chord-bar" data-bar="${bar}">${chord}</div>`;
+        }
+
+        html += '</div>';
+        display.innerHTML = html;
+    }
+
+    getChordAtBeat(bar, beat) {
+        // 指定された小節・拍のコードを取得
+        if (!this.chordProgression || this.chordProgression.length === 0) {
+            return '-';
+        }
+
+        // この拍以前で最も近いコードを探す
+        let currentChord = 'N.C.';
+
+        for (const entry of this.chordProgression) {
+            if (entry.bar > bar) break;
+            if (entry.bar === bar && entry.beat > beat) break;
+
+            if (entry.bar < bar || (entry.bar === bar && entry.beat <= beat)) {
+                currentChord = entry.chord;
+            }
+        }
+
+        return currentChord;
+    }
+
+    updateChordProgressionHighlight() {
+        // 現在再生中の位置に応じてコードをハイライトし、スクロール
+        if (!this.isPlaying || !this.detectedBPM || this.chordProgression.length === 0) return;
+
+        const currentTime = this.audioElement.currentTime - this.firstBeatOffset;
+        const beatDuration = 60.0 / this.detectedBPM;
+        const beatsPerBar = this.metronome.beatsPerBar;
+
+        // 現在の小節を計算
+        const totalBeats = Math.floor(currentTime / beatDuration);
+        const currentBar = Math.floor(totalBeats / beatsPerBar) + 1;
+
+        // すべてのハイライトをクリア
+        document.querySelectorAll('.chord-bar.active').forEach(el => el.classList.remove('active'));
+
+        // 現在の小節をハイライト
+        const barElement = document.querySelector(`.chord-bar[data-bar="${currentBar}"]`);
+        if (barElement) {
+            barElement.classList.add('active');
+
+            // 現在の小節が中央に来るようにtransformでスライド
+            const container = document.querySelector('.chord-bars-container');
+            const display = document.getElementById('chordProgressionDisplay');
+            const barWidth = 120; // CSSで指定した幅
+            const displayWidth = display.clientWidth;
+
+            // 中央に来るようにオフセットを計算
+            const offset = (currentBar - 1) * barWidth - (displayWidth / 2) + (barWidth / 2);
+            container.style.transform = `translateX(-${Math.max(0, offset)}px)`;
         }
     }
 
