@@ -25,6 +25,7 @@ export class Metronome {
         this.animationType = localStorage.getItem('animationType') || this.defaults.animationType;
         this.subdivisionSound = localStorage.getItem('subdivisionSound') === 'true';
         this.subdivisionVolume = (parseInt(localStorage.getItem('subdivisionVolume')) || 50) / 100;
+        this.noAccent = localStorage.getItem('noAccent') === 'true';
 
         this.noteTime = 0.0;
         this.scheduleAheadTime = 0.1;
@@ -68,6 +69,7 @@ export class Metronome {
         document.getElementById('subdivisionSound').checked = this.subdivisionSound;
         this.setSubdivisionVolume(this.subdivisionVolume * 100);
         this.toggleSubdivisionVolumeControl();
+        document.getElementById('noAccent').checked = this.noAccent;
         this.setAnimationType(this.animationType);
     }
 
@@ -81,6 +83,7 @@ export class Metronome {
         localStorage.setItem('animationType', this.animationType);
         localStorage.setItem('subdivisionSound', this.subdivisionSound);
         localStorage.setItem('subdivisionVolume', Math.round(this.subdivisionVolume * 100));
+        localStorage.setItem('noAccent', this.noAccent);
     }
 
     // 設定をリセット
@@ -97,6 +100,7 @@ export class Metronome {
         this.animationType = this.defaults.animationType;
         this.subdivisionSound = false;
         this.subdivisionVolume = 0.5;
+        this.noAccent = false;
 
         this.loadSettings();
         this.saveSettings();
@@ -109,6 +113,11 @@ export class Metronome {
 
         osc.connect(gainNode);
         gainNode.connect(this.audioContext.destination);
+
+        // noAccentオプションが有効な場合は、アクセントを無効化
+        if (this.noAccent) {
+            isAccent = false;
+        }
 
         // 細分化された音の場合、別の音を使用
         if (isSubdivision && this.subdivisionSound) {
@@ -371,6 +380,11 @@ export class Metronome {
     updateVisuals(isAccent, beatNumber, totalBeatCount) {
         this.updateBeatIndicator(beatNumber);
 
+        // noAccentオプションが有効な場合は、アクセントを無効化
+        if (this.noAccent) {
+            isAccent = false;
+        }
+
         const visualDisplay = document.querySelector('.visual-display');
         const bpmDisplay = document.getElementById('bpm-display');
         const pendulum = document.getElementById('pendulum');
@@ -627,6 +641,12 @@ export class Metronome {
         // 細分化拍音量スライダー
         document.getElementById('subdivisionVolumeSlider').addEventListener('input', (e) => {
             this.setSubdivisionVolume(parseInt(e.target.value));
+        });
+
+        // 1拍目の強調を無効化オプション
+        document.getElementById('noAccent').addEventListener('change', (e) => {
+            this.noAccent = e.target.checked;
+            this.saveSettings();
         });
 
         // プリセットボタン
