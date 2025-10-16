@@ -264,27 +264,34 @@ export class MusicAnalyzer {
         // 半拍分の秒数を計算
         const halfBeatDuration = (60.0 / this.detectedBPM) / 2;
 
-        // metronomeBeatOffsetを半拍分シフト（audioStartOffsetは変更しない）
-        this.metronomeBeatOffset += halfBeatDuration;
-
-        console.log(`メトロノーム拍位置を半拍シフト: ${halfBeatDuration.toFixed(3)}秒, 新しいオフセット: ${this.metronomeBeatOffset.toFixed(3)}秒`);
-
-        // 再生中の場合、同期を再調整
+        // 再生中の場合、シフト前の値で現在の拍位置を計算してから更新
         if (this.isPlaying && this.syncWithMetronome && this.metronome.isPlaying) {
             const currentTime = this.audioElement.currentTime;
             const adjustedBPM = this.detectedBPM * this.playbackRate;
-            const elapsedBeats = ((currentTime - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
-            const beatInBar = Math.floor(elapsedBeats) % this.metronome.beatsPerBar;
-            const totalBeats = Math.floor(elapsedBeats);
 
-            console.log(`メトロノーム同期を再調整: beatInBar=${beatInBar}, totalBeats=${totalBeats}`);
+            // シフト前のmetronomeBeatOffsetで計算
+            const oldElapsedBeats = ((currentTime - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
+
+            // metronomeBeatOffsetを半拍分シフト
+            this.metronomeBeatOffset += halfBeatDuration;
+
+            // シフト後の新しいmetronomeBeatOffsetで再計算
+            const newElapsedBeats = ((currentTime - this.metronomeBeatOffset) / 60.0) * adjustedBPM;
+            const beatInBar = Math.floor(newElapsedBeats) % this.metronome.beatsPerBar;
+            const totalBeats = Math.floor(newElapsedBeats);
+
+            console.log(`メトロノーム拍位置を半拍シフト: ${halfBeatDuration.toFixed(3)}秒, 新しいオフセット: ${this.metronomeBeatOffset.toFixed(3)}秒`);
+            console.log(`メトロノーム同期を再調整: oldElapsedBeats=${oldElapsedBeats.toFixed(2)}, newElapsedBeats=${newElapsedBeats.toFixed(2)}, beatInBar=${beatInBar}, totalBeats=${totalBeats}`);
 
             this.metronome.currentBeat = beatInBar;
             this.metronome.totalBeats = totalBeats;
             this.metronome.updateVisuals(0);
         } else {
-            // 再生中でない場合は、currentTimeを0にリセット（次回再生時に最初から）
+            // 再生中でない場合は、metronomeBeatOffsetを更新してcurrentTimeを0にリセット
+            this.metronomeBeatOffset += halfBeatDuration;
             this.audioElement.currentTime = 0;
+
+            console.log(`メトロノーム拍位置を半拍シフト: ${halfBeatDuration.toFixed(3)}秒, 新しいオフセット: ${this.metronomeBeatOffset.toFixed(3)}秒`);
             console.log('再生位置を0にリセット（次回再生時は最初から）');
         }
     }
